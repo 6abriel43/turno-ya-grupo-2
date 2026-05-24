@@ -1,8 +1,9 @@
 """Pruebas unitarias del modelo Medico."""
 
 from django.test import TestCase
-from app.models import Medico
-
+from app.models import Medico, Turno, Paciente
+from django.utils import timezone
+from datetime import timedelta
 
 class MedicoModelTest(TestCase):
     """Verifica comportamiento básico y validaciones del modelo."""
@@ -72,10 +73,21 @@ class MedicoModelTest(TestCase):
         self.assertEqual(self.medico.nombre, "Laura")  # sin cambios
 
     # TODO: agregar tests para Paciente y Turno cuando los implementen
-    
+class TurnoModelTest(TestCase):
+
     """TESTS DE MODELO TURNO"""
+
+    def setUp(self):
+        self.medico = Medico.objects.create(
+            nombre="Juan", apellido="Perez", matricula="MP-1", especialidad="Cardiología"
+        )
+        self.paciente = Paciente.objects.create(
+            nombre="Maria", apellido="Gomez"
+        )
+
     def test_cancelar_turno_exitoso(self):
-        turno, _ = Turno.new(fecha_hora=..., medico=..., paciente=...)
+        fecha = timezone.now() + timedelta(days=1)
+        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
         errors = turno.cancelar()
         self.assertEqual(len(errors), 0)
         self.assertEqual(turno.estado, "CANCELADO")

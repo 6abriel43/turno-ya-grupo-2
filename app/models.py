@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from django.db import models
-
+from django.utils import timezone
 
 class Medico(models.Model):
     """Representa a un profesional médico disponible para turnos."""
@@ -90,15 +90,15 @@ class Medico(models.Model):
     # class Paciente(models.Model): ...
         
     """MODELO TURNO"""
-    class Turno(models.Model):
-        """Representa a un profesional médico disponible para turnos."""
-        fecha_hora = models.DateTimeField()
-        motivo = models.CharField(max_length=255, blank=True, default="")
-        estado = models.CharField(max_length=20, default="PENDIENTE")
-        medico = models.ForeignKey(Medico, on_delete=models.CASCADE, related_name="turnos")
-        paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="turnos")
-        objects = models.Manager()
-        analitica = ClinicaManager()
+class Turno(models.Model):
+    """Representa a un profesional médico disponible para turnos."""
+    fecha_hora = models.DateTimeField()
+    motivo = models.CharField(max_length=255, blank=True, default="")
+    estado = models.CharField(max_length=20, default="PENDIENTE")
+    medico = models.ForeignKey(Medico, on_delete=models.CASCADE, related_name="turnos")
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="turnos")
+    objects = models.Manager()
+    analitica = ClinicaManager()
 
     class Meta:
         ordering = ["fecha_hora"]
