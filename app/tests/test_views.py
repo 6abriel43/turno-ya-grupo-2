@@ -15,7 +15,7 @@ class TurnoCreateViewTest(TestCase):
 
     def test_creacion_turno_valido(self):
         self.client.login(username='testuser', password='password')
-        url = reverse('crear_turno')
+        url = reverse('app:crear_turno')
         data = {
             'medico': self.medico.id,
             'paciente': self.paciente.id,
@@ -32,7 +32,7 @@ class TurnoCreateViewTest(TestCase):
         #creamos un turno ya existente
         Turno.objects.create(medico=self.medico, paciente=self.paciente, fecha_hora=fecha, estado="ACEPTADO")
         
-        url = reverse('crear_turno')
+        url = reverse('app:crear_turno')
         data = {
             'medico': self.medico.id,
             'paciente': self.paciente.id,
