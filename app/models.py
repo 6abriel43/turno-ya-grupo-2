@@ -117,7 +117,7 @@ class Medico(models.Model):
     @classmethod
     def new(cls, **kwargs) -> tuple[Turno, list[str]]:
         instancia = cls(**kwargs)
-        errors = turno.validate()
+        errors = instancia.validate()
         if errors: return None, errors
         instancia.save()
         return instancia, []
