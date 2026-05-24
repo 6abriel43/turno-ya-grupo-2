@@ -88,4 +88,66 @@ class Medico(models.Model):
     # TODO: Agregar los siguientes modelos:
     # class Especialidad(models.Model): ...  ← extraer especialidad a FK
     # class Paciente(models.Model): ...
-    # class Turno(models.Model): ...
+        
+    """MODELO TURNO"""
+    class Turno(models.Model):
+        """Representa a un profesional médico disponible para turnos."""
+        fecha_hora = models.DateTimeField()
+        motivo = models.CharField(max_length=255, blank=True, default="")
+        estado = models.CharField(max_length=20, default="PENDIENTE")
+        medico = models.ForeignKey(Medico, on_delete=models.CASCADE, related_name="turnos")
+        paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="turnos")
+        objects = models.Manager()
+        analitica = ClinicaManager()
+
+    class Meta:
+        ordering = ["fecha_hora"]
+        verbose_name_plural = "turnos"
+    
+    def __str__(self) -> str:
+        return f"Turno: {self.fecha_hora} - Paciente: {self.paciente.apellido}"
+    
+    def validate(self) -> list[str]:
+        errors = []
+        if not self.fecha_hora or not self.medico or not self.paciente:
+            errors.append("Datos incompletos.")
+        if self.fecha_hora and self.fecha_hora < timezone.now():
+            errors.append("No se pueden solicitar turnos en fechas pasadas.")
+        return errors
+    
+    @classmethod
+    def new(cls, **kwargs) -> tuple[Turno, list[str]]:
+        instancia = cls(**kwargs)
+        errors = instancia.validate()
+        if errors: return None, errors
+        instancia.save()
+        return instancia, []
+    
+    def update(self, **kwargs) -> list[str]:
+        for key, value in kwargs.items(): setattr(self, key, value)
+        errors = self.validate()
+        if errors: return errors
+        self.save()
+        return []
+    
+    """METODOS PARA CANCELAR/ACEPTAR TURNOS"""
+    def cancelar(self) -> list[str]:
+        """Cancela el turno actual."""
+        #Regla de negocio: No cancelar si el turno ya pasó
+        if self.fecha_hora < timezone.now():
+            return ["No se puede cancelar un turno que ya ha finalizado."]
+        self.estado = "CANCELADO"
+        self.save()
+        return []
+
+    def aceptar(self) -> list[str]:
+        """Acepta el turno actual."""
+        #Regla de negocio: Solo pasar a aceptado si está pendiente
+        if self.estado != "PENDIENTE":
+            return [f"El turno no puede ser aceptado porque su estado actual es {self.estado}."]    
+        self.estado = "ACEPTADO"
+        self.save()
+        return []
+
+
+
