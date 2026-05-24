@@ -108,7 +108,7 @@ class Medico(models.Model):
     
     def validate(self) -> list[str]:
         errors = []
-        if not self.fecha_hora or not self.medico or not selt.paciente:
+        if not self.fecha_hora or not self.medico or not self.paciente:
             errors.append("Datos incompletos.")
         if self.fecha_hora and self.fecha_hora < timezone.now():
             errors.append("No se pueden solicitar turnos en fechas pasadas.")
