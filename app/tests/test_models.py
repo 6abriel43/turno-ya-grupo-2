@@ -72,3 +72,33 @@ class MedicoModelTest(TestCase):
         self.assertEqual(self.medico.nombre, "Laura")  # sin cambios
 
     # TODO: agregar tests para Paciente y Turno cuando los implementen
+    
+    """TESTS DE MODELO TURNO"""
+    def test_cancelar_turno_exitoso(self):
+        turno, _ = Turno.new(fecha_hora=..., medico=..., paciente=...)
+        errors = turno.cancelar()
+        self.assertEqual(len(errors), 0)
+        self.assertEqual(turno.estado, "CANCELADO")
+
+    def test_cancelar_turno_pasado_falla(self):
+        # Creamos un turno en el pasado 
+        fecha_pasada = timezone.now() - timedelta(days=1)
+        turno, _ = Turno.new(fecha_hora=fecha_pasada, medico=self.medico, paciente=self.paciente)
+        errores = turno.cancelar()
+        self.assertNotEqual(len(errores), 0)
+        self.assertEqual(turno.estado, "PENDIENTE")
+    
+    def test_aceptar_turno_exitoso(self):
+        turno, _ = Turno.new(fecha_hora=timezone.now() + timedelta(days=1), medico=self.medico, paciente=self.paciente)
+        errores = turno.aceptar()
+        self.assertEqual(len(errores), 0)
+        self.assertEqual(turno.estado, "ACEPTADO")
+
+    def test_aceptar_turno_ya_cancelado_falla(self):
+        turno, _ = Turno.new(fecha_hora=timezone.now() + timedelta(days=1), medico=self.medico, paciente=self.paciente)
+        turno.cancelar() #cancelamos primero
+        #Intenta aceptarlo
+        errores = turno.aceptar()
+        #Verifico que falle
+        self.assertNotEqual(len(errores), 0)
+        self.assertEqual(turno.estado, "CANCELADO")

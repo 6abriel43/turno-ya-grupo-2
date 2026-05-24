@@ -88,7 +88,8 @@ class Medico(models.Model):
     # TODO: Agregar los siguientes modelos:
     # class Especialidad(models.Model): ...  ← extraer especialidad a FK
     # class Paciente(models.Model): ...
-    
+        
+    """MODELO TURNO"""
     class Turno(models.Model):
         """Representa a un profesional médico disponible para turnos."""
         fecha_hora = models.DateTimeField()
@@ -96,8 +97,8 @@ class Medico(models.Model):
         estado = models.CharField(max_length=20, default="PENDIENTE")
         medico = models.ForeignKey(Medico, on_delete=models.CASCADE, related_name="turnos")
         paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="turnos")
-    objects = models.Manager()
-    analitica = ClinicaManager()
+        objects = models.Manager()
+        analitica = ClinicaManager()
 
     class Meta:
         ordering = ["fecha_hora"]
