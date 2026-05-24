@@ -128,6 +128,25 @@ class Medico(models.Model):
         if errors: return errors
         self.save()
         return []
+    
+    """METODOS PARA CANCELAR/ACEPTAR TURNOS"""
+    def cancelar(self) -> list[str]:
+        """Cancela el turno actual."""
+        #Regla de negocio: No cancelar si el turno ya pasó
+        if self.fecha_hora < timezone.now():
+            return ["No se puede cancelar un turno que ya ha finalizado."]
+        self.estado = "CANCELADO"
+        self.save()
+        return []
+
+    def aceptar(self) -> list[str]:
+        """Acepta el turno actual."""
+        #Regla de negocio: Solo pasar a aceptado si está pendiente
+        if self.estado != "PENDIENTE":
+            return [f"El turno no puede ser aceptado porque su estado actual es {self.estado}."]    
+        self.estado = "ACEPTADO"
+        self.save()
+        return []
 
 
 
