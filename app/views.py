@@ -1,8 +1,10 @@
 """Vistas iniciales para navegar médicos y pantalla de inicio."""
 
-from django.views.generic import ListView, TemplateView
-from .models import Medico
-
+from django.views.generic import ListView, TemplateView, CreateView
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import Medico, Turno
+from .forms import TurnoForm #formulario hecho en forms.py
 
 class HomeView(TemplateView):
     """Vista de inicio. Por ahora vacía — completar con estadísticas."""
@@ -24,3 +26,14 @@ class ListaMedicosView(ListView):
 # class NuevoTurnoView(...): ...
 # class CancelarTurnoView(...): ...
 # class ListaPacientesView(...): ...
+
+class TurnoCreateView(LoginRequiredMixin, CreateView):
+    model = Turno
+    form_class = TurnoForm
+    template_name = 'clinica/turno_form.html'
+    success_url = reverse_lazy('lista_turnos') # Cambia 'lista_turnos' por el nombre de URL de listado
+
+    def form_valid(self, form):
+        # Opcional: imprimir en consola para debug como pide la guía avanzada
+        print(f"Se está creando un turno para el médico: {form.cleaned_data['medico']}")
+        return super().form_valid(form)
