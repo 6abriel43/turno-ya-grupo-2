@@ -89,6 +89,7 @@ class Medico(models.Model):
     # class Especialidad(models.Model): ...  ← extraer especialidad a FK
     # class Paciente(models.Model): ...
         
+    #FALTA IMPLEMENTAR ClinicaManager()    
     """MODELO TURNO"""
 class Turno(models.Model):
     """Representa a un profesional médico disponible para turnos."""
@@ -116,10 +117,11 @@ class Turno(models.Model):
         return errors
     
     @classmethod
-    def new(cls, **kwargs) -> tuple[Turno, list[str]]:
+    def new(cls, **kwargs) -> tuple[Turno | None, list[str]]:
         instancia = cls(**kwargs)
         errors = instancia.validate()
-        if errors: return None, errors
+        if errors: 
+            return None, errors
         instancia.save()
         return instancia, []
     
