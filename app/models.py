@@ -190,6 +190,10 @@ class Ausencia(models.Model):
         self.save()
         return []
 
+    def es_vigente(self) -> bool:
+        """Retorna True si la ausencia está ocurriendo en el día de hoy."""
+        hoy = timezone.now().date()
+        return self.fecha_inicio <= hoy <= self.fecha_fin
 
 '''---'''
 
@@ -233,4 +237,10 @@ class Recordatorio(models.Model):
         if errors: return errors
         self.save()
         if usuarios_lista is not None: self.usuarios.set(usuarios_lista)
+        return []
+
+def marcar_como_leido(self) -> list[str]:
+        """Método de negocio requerido por la entrega intermedia."""
+        self.leido = True
+        self.save()
         return []
