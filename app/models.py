@@ -209,3 +209,28 @@ class Recordatorio(models.Model):
 
     def __str__(self) -> str:
         return f"Recordatorio: {self.asunto} ({self.fecha_envio.strftime('%d/%m/%Y')})"
+
+    def validate(self) -> list[str]:
+        errors = []
+        if not self.turno or not self.fecha_envio or not self.asunto:
+            errors.append("Datos incompletos.")
+        return errors
+
+    @classmethod
+    def new(cls, **kwargs) -> tuple[Recordatorio | None, list[str]]:
+        usuarios_lista = kwargs.pop('usuarios', [])
+        instancia = cls(**kwargs)
+        errors = instancia.validate()
+        if errors: return None, errors
+        instancia.save()
+        if usuarios_lista: instancia.usuarios.set(usuarios_lista)
+        return instancia, []
+
+    def update(self, **kwargs) -> list[str]:
+        usuarios_lista = kwargs.pop('usuarios', None)
+        for key, value in kwargs.items(): setattr(self, key, value)
+        errors = self.validate()
+        if errors: return errors
+        self.save()
+        if usuarios_lista is not None: self.usuarios.set(usuarios_lista)
+        return []
