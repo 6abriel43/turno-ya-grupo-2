@@ -89,6 +89,30 @@ class Medico(models.Model):
     # class Especialidad(models.Model): ...  ← extraer especialidad a FK
     # class Paciente(models.Model): ...
         
+'''---'''
+class EstadisticasClinicaQuerySet(models.QuerySet):
+    def metricas_del_dia(self) -> dict:
+        """Calcula en el servidor las estadísticas requeridas para la Home."""
+        hoy = timezone.now().date()
+        turnos_hoy = self.filter(fecha_hora__date=hoy)
+        return {
+            'total_turnos_hoy': turnos_hoy.count(),
+            'turnos_aceptados': turnos_hoy.filter(estado="ACEPTADO").count(),
+            'turnos_pendientes': turnos_hoy.filter(estado="PENDIENTE").count(),
+            'total_ausencias_activas': Ausencia.objects.filter(
+                fecha_inicio__lte=hoy, 
+                fecha_fin__gte=hoy
+            ).count()
+        }
+
+class ClinicaManager(models.Manager):
+    def get_queryset(self):
+        return EstadisticasClinicaQuerySet(self.model, def_using=self._db)
+
+    def obtener_panel_home(self) -> dict:
+        return self.get_queryset().metricas_del_dia()
+
+
     #FALTA IMPLEMENTAR ClinicaManager()    
     """MODELO TURNO"""
 class Turno(models.Model):
@@ -156,7 +180,6 @@ class Especialidad(models.Model):
 
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True, null=True)
-
     class Meta:
         ordering = ["nombre"]
         verbose_name_plural = "especialidades"
@@ -258,5 +281,98 @@ class ObraSocial(models.Model):
             return errors
         self.nombre = nombre.strip()
         self.sigla = sigla.strip().upper() if sigla else None
+        self.save()
+        return []
+    
+''''MODELO AUSENCIA + RECORDATORIO'''
+
+class Ausencia(models.Model):
+    """Registra las ausencias de un médico."""
+    medico = models.ForeignKey(Medico, on_delete=models.CASCADE, related_name="ausencias")
+    motivo = models.CharField(max_length=255)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+
+    class Meta:
+        ordering = ["-fecha_inicio"]
+        verbose_name_plural = "Ausencias"
+
+    def __str__(self) -> str:
+        return f"Ausencia {self.medico} ({self.fecha_inicio})"
+
+    def validate(self) -> list[str]:
+        errors = []
+        if not self.medico: errors.append("Médico obligatorio.")
+        if not self.fecha_inicio or not self.fecha_fin or self.fecha_inicio > self.fecha_fin:
+            errors.append("Fechas inválidas.")
+        return errors
+
+    @classmethod
+    def new(cls, **kwargs) -> tuple[Ausencia | None, list[str]]:
+        instancia = cls(**kwargs)
+        errors = instancia.validate()
+        if errors: return None, errors
+        instancia.save()
+        return instancia, []
+
+    def update(self, **kwargs) -> list[str]:
+        for key, value in kwargs.items(): setattr(self, key, value)
+        errors = self.validate()
+        if errors: return errors
+        self.save()
+        return []
+
+    def es_vigente(self) -> bool:
+        """Retorna True si la ausencia está ocurriendo en el día de hoy."""
+        hoy = timezone.now().date()
+        return self.fecha_inicio <= hoy <= self.fecha_fin
+
+'''---'''
+
+class Recordatorio(models.Model):
+    """Notificaciones."""
+    turno = models.ForeignKey(Turno, on_delete=models.CASCADE, related_name="recordatorios")
+    fecha_envio = models.DateTimeField()
+    tipo = models.CharField(max_length=50)
+    usuarios = models.ManyToManyField(User, related_name="recordatorios")
+    asunto = models.CharField(max_length=255)
+    mensaje = models.TextField()
+    leido = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-fecha_envio"]
+        verbose_name_plural = "Recordatorios"
+
+    def __str__(self) -> str:
+        return f"Recordatorio: {self.asunto} ({self.fecha_envio.strftime('%d/%m/%Y')})"
+
+    def validate(self) -> list[str]:
+        errors = []
+        if not self.turno or not self.fecha_envio or not self.asunto:
+            errors.append("Datos incompletos.")
+        return errors
+
+    @classmethod
+    def new(cls, **kwargs) -> tuple[Recordatorio | None, list[str]]:
+        usuarios_lista = kwargs.pop('usuarios', [])
+        instancia = cls(**kwargs)
+        errors = instancia.validate()
+        if errors: return None, errors
+        instancia.save()
+        if usuarios_lista: instancia.usuarios.set(usuarios_lista)
+        return instancia, []
+
+    def update(self, **kwargs) -> list[str]:
+        usuarios_lista = kwargs.pop('usuarios', None)
+        for key, value in kwargs.items(): setattr(self, key, value)
+        errors = self.validate()
+        if errors: return errors
+        self.save()
+        if usuarios_lista is not None: self.usuarios.set(usuarios_lista)
+        return []
+
+def marcar_como_leido(self) -> list[str]:
+        """Método de negocio requerido por la entrega intermedia."""
+        self.leido = True
         self.save()
         return []
