@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Log in - TurnoYa{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card shadow border-0 mt-4">
+      <div class="card-body p-5">
+        <div class="text-center mb-4">
+          <h2 class="fw-bold">Ingresar al Sistema</h2>
+        </div>
+
+        {% if form.errors %}
+          <div class="alert alert-danger" role="alert">
+            Usuario o contraseña incorrectos. Por favor, intente de nuevo.
+          </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+          
+          <div class="mb-3">
+            <label for="id_username" class="form-label fw-semibold">Nombre de usuario</label>
+            <input type="text" name="username" id="id_username" class="form-control" placeholder="Ej: admin" required>
+          </div>
+
+          <div class="mb-4">
+            <label for="id_password" class="form-label fw-semibold">Contraseña</label>
+            <input type="password" name="password" id="id_password" class="form-control" placeholder="••••••••" required>
+          </div>
+
+          <button type="submit" class="btn btn-success w-100 py-2 fw-bold mb-3 shadow-sm">
+            Iniciar Sesión
+          </button>
+        </form>
+        <hr class="text-muted my-4">
+
+        <div class="text-center">
+          <span class="text-muted">sin cuenta?</span> 
+          <a href="{% url 'app:registro' %}" class="text-success fw-semibold text-decoration-none">Registrese aquí</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
