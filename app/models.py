@@ -152,4 +152,18 @@ class Turno(models.Model):
         return []
 
 
+''''MODELO AUSENCIA + RECORDATORIO'''
 
+class Ausencia(models.Model):
+    """Registra las ausencias de un médico."""
+    medico = models.ForeignKey(Medico, on_delete=models.CASCADE, related_name="ausencias")
+    motivo = models.CharField(max_length=255)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+
+    class Meta:
+        ordering = ["-fecha_inicio"]
+        verbose_name_plural = "Ausencias"
+
+    def __str__(self) -> str:
+        return f"Ausencia {self.medico} ({self.fecha_inicio})"
