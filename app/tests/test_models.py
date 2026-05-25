@@ -186,3 +186,34 @@ class AusenciaModelTest(TestCase):
         self.assertEqual(errors, [])
         self.ausencia.refresh_from_db()
         self.assertEqual(self.ausencia.motivo, "Enfermedad")
+
+
+class RecordatorioModelTest(TestCase):
+    
+    def setUp(self):
+        self.medico = Medico.objects.create(
+            nombre="Laura", apellido="Romero", matricula="MP-9999", especialidad="Pediatría"
+        )
+        self.paciente = Paciente.objects.create(nombre="Maria", apellido="Gomez")
+        self.turno, _ = Turno.new(
+            fecha_hora=timezone.now() + timedelta(days=1), medico=self.medico, paciente=self.paciente
+        )
+        self.recordatorio, _ = Recordatorio.new(
+            turno=self.turno,
+            fecha_envio=timezone.now(),
+            tipo="SMS",
+            asunto="Aviso",
+            mensaje="Recordatorio"
+        )
+
+    # --- __str__ y métodos de negocio ---
+
+    def test_str_incluye_asunto(self):
+        self.assertIn("Aviso", str(self.recordatorio))
+
+    def test_marcar_como_leido_modifica_estado_exitoso(self):
+        """Método de negocio: caso exitoso."""
+        self.assertFalse(self.recordatorio.leido)
+        errors = self.recordatorio.marcar_como_leido()
+        self.assertEqual(errors, [])
+        self.assertTrue(self.recordatorio.leido)
