@@ -167,3 +167,25 @@ class Ausencia(models.Model):
 
     def __str__(self) -> str:
         return f"Ausencia {self.medico} ({self.fecha_inicio})"
+
+    def validate(self) -> list[str]:
+        errors = []
+        if not self.medico: errors.append("Médico obligatorio.")
+        if not self.fecha_inicio or not self.fecha_fin or self.fecha_inicio > self.fecha_fin:
+            errors.append("Fechas inválidas.")
+        return errors
+
+    @classmethod
+    def new(cls, **kwargs) -> tuple[Ausencia | None, list[str]]:
+        instancia = cls(**kwargs)
+        errors = instancia.validate()
+        if errors: return None, errors
+        instancia.save()
+        return instancia, []
+
+    def update(self, **kwargs) -> list[str]:
+        for key, value in kwargs.items(): setattr(self, key, value)
+        errors = self.validate()
+        if errors: return errors
+        self.save()
+        return []
