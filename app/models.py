@@ -150,6 +150,57 @@ class Turno(models.Model):
         self.estado = "ACEPTADO"
         self.save()
         return []
+    
+class Especialidad(models.Model):
+    """Representa la especialidad médica (Ej: Pediatría, Cardiología)."""
 
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
 
+    class Meta:
+        ordering = ["nombre"]
+        verbose_name_plural = "especialidades"
 
+    def __str__(self):
+        return self.nombre
+    
+    @classmethod
+    def validate(cls, nombre):
+        """
+        Validate, valida datos de la especialidad, en caso de que esté vacio
+        los datos son válidos, en caso de que no, retorna una lista con errores.
+        """
+        errors = []
+        if not nombre or not nombre.strip():
+            errors.append("El nombre de la especialidad es obligatorio.")
+        elif len(nombre.strip()) < 4:
+            errors.append("El nombre de la especialidad debe tener al menos 4 caracteres.")
+        return errors
+    
+    @classmethod
+    def new(cls, nombre, descripcion=None):
+        """
+        crea la nueva especialidad si lso datos son válidos.
+        la instancia es None, en caso de errores, retorna la instancia y el error.
+        """
+        errors = cls.validate(nombre)
+        if errors:
+            return None, errors
+        especialidad = cls.objects.create(
+            nombre=nombre.strip(),
+            descripcion=descripcion.strip() if descripcion else None
+        )
+        return especialidad, []
+    
+    def update(self, nombre, descripcion=None):
+        """
+        si los datos son válidos, actualiza la especialidad.
+        en caso de error, retorna lista de errores, caso contrario retorna lista vacia.
+        """
+        errors = self.__class__.validate(nombre)
+        if errors:
+            return errors
+        self.nombre = nombre.strip()
+        self.descripcion = descripcion.strip() if descripcion else None
+        self.save()
+        return []
