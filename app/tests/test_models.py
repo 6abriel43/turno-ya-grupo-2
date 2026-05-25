@@ -217,3 +217,27 @@ class RecordatorioModelTest(TestCase):
         errors = self.recordatorio.marcar_como_leido()
         self.assertEqual(errors, [])
         self.assertTrue(self.recordatorio.leido)
+
+        # --- validate ---
+
+    def test_validate_datos_correctos_retorna_lista_vacia(self):
+        errors = self.recordatorio.validate()
+        self.assertEqual(errors, [])
+
+    # --- new ---
+
+    def test_new_crea_recordatorio_con_datos_validos(self):
+        rec, errors = Recordatorio.new(
+            turno=self.turno, fecha_envio=timezone.now(), tipo="EMAIL", asunto="Turno Mañana", mensaje="Test"
+        )
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(rec)
+        self.assertTrue(Recordatorio.objects.filter(asunto="Turno Mañana").exists())
+
+    # --- update ---
+
+    def test_update_modifica_datos_correctamente(self):
+        errors = self.recordatorio.update(asunto="Nuevo Asunto")
+        self.assertEqual(errors, [])
+        self.recordatorio.refresh_from_db()
+        self.assertEqual(self.recordatorio.asunto, "Nuevo Asunto")
