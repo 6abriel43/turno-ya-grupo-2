@@ -189,3 +189,23 @@ class Ausencia(models.Model):
         if errors: return errors
         self.save()
         return []
+
+
+'''---'''
+
+class Recordatorio(models.Model):
+    """Notificaciones."""
+    turno = models.ForeignKey(Turno, on_delete=models.CASCADE, related_name="recordatorios")
+    fecha_envio = models.DateTimeField()
+    tipo = models.CharField(max_length=50)
+    usuarios = models.ManyToManyField(User, related_name="recordatorios")
+    asunto = models.CharField(max_length=255)
+    mensaje = models.TextField()
+    leido = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-fecha_envio"]
+        verbose_name_plural = "Recordatorios"
+
+    def __str__(self) -> str:
+        return f"Recordatorio: {self.asunto} ({self.fecha_envio.strftime('%d/%m/%Y')})"
