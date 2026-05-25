@@ -204,3 +204,59 @@ class Especialidad(models.Model):
         self.descripcion = descripcion.strip() if descripcion else None
         self.save()
         return []
+    
+class ObraSocial(models.Model):
+    """Representa la cobertura médica del paciente (Ej: OSDE, PAMI)."""
+
+    nombre = models.CharField(max_length=100, unique=True)
+    sigla = models.CharField(max_length=20, blank=True, null=True)
+
+    class Meta:
+        ordering = ["nombre"]
+        verbose_name_plural = "obras sociales"
+
+    def __str__(self):
+        if self.sigla:
+            return f"{self.sigla} - {self.nombre}"
+        return self.nombre
+    
+    @classmethod
+    def validate(cls, nombre):
+        """
+        Valida datos, en caso de errores retorna lista con errores
+        en caso contrario, retorna lista vacia.
+        """
+        errors = []
+        if not nombre or not nombre.strip():
+            errors.append("El nombre de la obra social es obligatorio.")
+        elif len(nombre.strip()) < 3:
+            errors.append("El nombre de la obra social debe tener al menos 3 caracteres.")
+        return errors
+    
+    @classmethod
+    def new(cls, nombre, sigla=None):
+        """
+        crea la nueva obra social en caso de que los datos sean válidos
+        en caso contrario retorna instancia y errores.
+        """
+        errors = cls.validate(nombre)
+        if errors:
+            return None, errors
+        obra_social = cls.objects.create(
+            nombre=nombre.strip(),
+            sigla=sigla.strip().upper() if sigla else None
+        )
+        return obra_social, []
+    
+    def update(self, nombre, sigla=None):
+        """
+        en caso de que los datos son válidos, actualiza la obra social
+        en caso contrario retorna lista de errores.
+        """
+        errors = self.__class__.validate(nombre)
+        if errors:
+            return errors
+        self.nombre = nombre.strip()
+        self.sigla = sigla.strip().upper() if sigla else None
+        self.save()
+        return []
