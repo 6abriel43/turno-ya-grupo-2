@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %}TurnoYa{% endblock %}</title>
+  <title>{% block title %} TurnoYa {% endblock %}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
@@ -22,25 +22,18 @@
         </ul>
         <ul class="navbar-nav ms-auto align-items-center">
           {% if user.is_authenticated %}
-            <li class="nav-item me-3 text-white-50">
-              <small><i class="bi bi-person-circle"></i> BIENVENIDO, <strong>{{ user.username }}</strong></small>
+            <li class="nav-item me-3 text-white">
+              Hola, <strong>{{ user.username }}</strong>
             </li>
             <li class="nav-item">
-              <form action="{% url 'login' %}" method="post" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-light btn-sm">
-                  <i class="bi bi-box-arrow-right"></i> Salir
-                </button>
-              </form>
+              <a class="btn btn-outline-light btn-sm" href="{% url 'app:logout' %}">Salir</a>
             </li>
           {% else %}
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'login' %}">Log in</a>
+              <a class="nav-link" href="{% url 'app:login' %}">log in</a>
             </li>
             <li class="nav-item">
-              <a class="btn btn-light btn-sm text-success fw-bold ms-2" href="{% url 'app:registro' %}">
-                <i class="bi bi-person-plus"></i> Sign in
-              </a>
+              <a class="btn btn-light btn-sm text-success fw-bold ms-2" href="{% url 'app:registro' %}">Sign in</a>
             </li>
           {% endif %}
         </ul>
