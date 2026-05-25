@@ -1,7 +1,7 @@
 """Pruebas unitarias del modelo Medico."""
 
 from django.test import TestCase
-from app.models import Medico, Turno, Paciente
+from app.models import Medico, Turno, Paciente , Ausencia , Recordatorio  #Agregar imports de modelos faltantes
 from django.utils import timezone
 from datetime import timedelta
 
@@ -114,3 +114,44 @@ class TurnoModelTest(TestCase):
         #Verifico que falle
         self.assertNotEqual(len(errores), 0)
         self.assertEqual(turno.estado, "CANCELADO")
+
+        ''''Test Modelos Ausencia + Recordatorio'''
+
+class AusenciaModelTest(TestCase):
+
+    def setUp(self):
+        # Infraestructura base idéntica al ejemplo del profesor
+        self.medico = Medico.objects.create(
+            nombre="Laura",
+            apellido="Romero",
+            matricula="MP-9999",
+            especialidad="Pediatría",
+        )
+        self.fecha_i = timezone.now().date()
+        self.fecha_f = timezone.now().date() + timedelta(days=2)
+        
+        self.ausencia, _ = Ausencia.new(
+            medico=self.medico,
+            motivo="Congreso",
+            fecha_inicio=self.fecha_i,
+            fecha_fin=self.fecha_f
+        )
+
+        # --- __str__ y métodos de negocio ---
+
+    def test_str_incluye_medico_y_fecha(self):
+        self.assertIn("Laura", str(self.ausencia))
+        self.assertIn("Romero", str(self.ausencia))
+
+    def test_es_vigente_hoy_retorna_true(self):
+        """Método de negocio: caso exitoso (está ocurriendo hoy)."""
+        self.assertTrue(self.ausencia.es_vigente())
+
+    def test_es_vigente_pasada_retorna_false(self):
+        """Método de negocio: caso alternativo (ausencia antigua)."""
+        hace_cinco_dias = timezone.now().date() - timedelta(days=5)
+        hace_dos_dias = timezone.now().date() - timedelta(days=2)
+        ausencia_vieja, _ = Ausencia.new(
+            medico=self.medico, motivo="Licencia", fecha_inicio=hace_cinco_dias, fecha_fin=hace_dos_dias
+        )
+        self.assertFalse(ausencia_vieja.es_vigente())
