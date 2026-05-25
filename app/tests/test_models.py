@@ -1,7 +1,7 @@
 """Pruebas unitarias del modelo Medico."""
 
 from django.test import TestCase
-from app.models import Medico, Turno, Paciente , Ausencia , Recordatorio  #Agregar imports de modelos faltantes
+from app.models import Medico, Turno, Paciente , Ausencia , Recordatorio , Especialidad , ObraSocial  #Agregar imports de modelos faltantes
 from django.utils import timezone
 from datetime import timedelta
 
@@ -241,3 +241,119 @@ class RecordatorioModelTest(TestCase):
         self.assertEqual(errors, [])
         self.recordatorio.refresh_from_db()
         self.assertEqual(self.recordatorio.asunto, "Nuevo Asunto")
+
+    # --- ESPECIALIDAD ---
+
+class EspecialidadModelTest(TestCase):
+    """Verifica comportamiento básico y validaciones del modelo Especialidad."""
+
+    def setUp(self):
+        self.especialidad, _ = Especialidad.new(
+            nombre="Pediatría",
+            descripcion="Cuidado médico de niños y adolescentes"
+        )
+
+        # --- __str__ y métodos simples ---
+    
+    def test_str_retorna_nombre_especialidad(self):
+        self.assertEqual(str(self.especialidad), "Pediatría")
+
+        # --- validate ---
+
+    def test_validate_datos_correctos_retorna_lista_vacia(self):
+        errors = Especialidad.validate("Cardiología")
+        self.assertEqual(errors, [])
+
+    def test_validate_nombre_vacio_retorna_error(self):
+        errors = Especialidad.validate("")
+        self.assertTrue(len(errors) > 0)
+        self.assertIn("El nombre de la especialidad es obligatorio.", errors)
+
+    def test_validate_nombre_corto_retorna_error(self):
+        errors = Especialidad.validate("Eco")  # Menos de 4 caracteres
+        self.assertTrue(len(errors) > 0)
+        self.assertIn("El nombre de la especialidad debe tener al menos 4 caracteres.", errors)
+
+        # --- new ---
+
+    def test_new_crea_especialidad_con_datos_validos(self):
+        esp, errors = Especialidad.new("Dermatología", "Problemas de la piel")
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(esp)
+        self.assertEqual(esp.nombre, "Dermatología")
+        self.assertTrue(Especialidad.objects.filter(nombre="Dermatología").exists())
+
+    def test_new_con_datos_invalidos_no_crea_registro(self):
+        count_antes = Especialidad.objects.count()
+        esp, errors = Especialidad.new("   ")
+        self.assertIsNone(esp)
+        self.assertTrue(len(errors) > 0)
+        self.assertEqual(Especialidad.objects.count(), count_antes)
+
+        # --- update ---
+
+    def test_update_modifica_datos_correctamente(self):
+        errors = self.especialidad.update("Neurología Infantil", "Nueva descripción")
+        self.assertEqual(errors, [])
+        self.especialidad.refresh_from_db()
+        self.assertEqual(self.especialidad.nombre, "Neurología Infantil")
+
+    def test_update_con_datos_invalidos_no_modifica(self):
+        errors = self.especialidad.update("")
+        self.assertTrue(len(errors) > 0)
+        self.especialidad.refresh_from_db()
+        self.assertEqual(self.especialidad.nombre, "Pediatría")
+
+    # --- OBRASOCIAL ---
+
+    class ObraSocialModelTest(TestCase):
+        """Verifica comportamiento básico y validaciones del modelo ObraSocial."""
+
+    def setUp(self):
+        self.obra_social, _ = ObraSocial.new(
+            nombre="Organización de Servicios Directos Empresarios",
+            sigla="osde"
+        )
+
+        # --- __str__ y métodos simples ---
+
+    def test_str_incluye_sigla_y_nombre_si_ambos_existen(self):
+        self.assertEqual(str(self.obra_social), "OSDE - Organización de Servicios Directos Empresarios")
+
+    def test_str_solo_incluye_nombre_si_no_hay_sigla(self):
+        os_sin_sigla, _ = ObraSocial.new(nombre="Obra Social de Chóferes")
+        self.assertEqual(str(os_sin_sigla), "Obra Social de Chóferes")
+
+        # --- validate ---
+
+    def test_validate_datos_correctos_retorna_lista_vacia(self):
+        errors = ObraSocial.validate("Programa de Atención Médica Integral")
+        self.assertEqual(errors, [])
+
+    def test_validate_nombre_vacio_retorna_error(self):
+        errors = ObraSocial.validate("")
+        self.assertTrue(len(errors) > 0)
+        self.assertIn("El nombre de la obra social es obligatorio.", errors)
+
+    def test_validate_nombre_corto_retorna_error(self):
+        errors = ObraSocial.validate("OS")
+        self.assertTrue(len(errors) > 0)
+        self.assertIn("El nombre de la obra social debe tener al menos 3 caracteres.", errors)
+
+        # --- new ---
+
+    def test_new_crea_obra_social_con_datos_validos_y_sigla_en_mayusculas(self):
+        os, errors = ObraSocial.new("Obra Social de la Unión del Personal Civil de la Nación", "upcn")
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(os)
+        self.assertEqual(os.sigla, "UPCN")
+        self.assertTrue(ObraSocial.objects.filter(sigla="UPCN").exists())
+
+        # --- update ---
+
+    def test_update_modifica_datos_correctamente(self):
+        errors = self.obra_social.update("Medicus SA", "med")
+        self.assertEqual(errors, [])
+        self.obra_social.refresh_from_db()
+        self.assertEqual(self.obra_social.nombre, "Medicus SA")
+        self.assertEqual(self.obra_social.sigla, "MED")
