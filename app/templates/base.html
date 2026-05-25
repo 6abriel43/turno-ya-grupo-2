@@ -20,6 +20,30 @@
           </li>
           <!-- TODO: agregar links a turnos y pacientes -->
         </ul>
+        <ul class="navbar-nav ms-auto align-items-center">
+          {% if user.is_authenticated %}
+            <li class="nav-item me-3 text-white-50">
+              <small><i class="bi bi-person-circle"></i> BIENVENIDO, <strong>{{ user.username }}</strong></small>
+            </li>
+            <li class="nav-item">
+              <form action="{% url 'login' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-light btn-sm">
+                  <i class="bi bi-box-arrow-right"></i> Salir
+                </button>
+              </form>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'login' %}">Log in</a>
+            </li>
+            <li class="nav-item">
+              <a class="btn btn-light btn-sm text-success fw-bold ms-2" href="{% url 'app:registro' %}">
+                <i class="bi bi-person-plus"></i> Sign in
+              </a>
+            </li>
+          {% endif %}
+        </ul>
       </div>
     </div>
   </nav>
