@@ -155,3 +155,34 @@ class AusenciaModelTest(TestCase):
             medico=self.medico, motivo="Licencia", fecha_inicio=hace_cinco_dias, fecha_fin=hace_dos_dias
         )
         self.assertFalse(ausencia_vieja.es_vigente())
+
+        # --- validate ---
+
+    def test_validate_datos_correctos_retorna_lista_vacia(self):
+        errors = self.ausencia.validate()
+        self.assertEqual(errors, [])
+
+    def test_validate_fechas_invertidas_retorna_error(self):
+        self.ausencia.fecha_inicio = timezone.now().date() + timedelta(days=5)
+        self.ausencia.fecha_fin = timezone.now().date()  # Fin antes que inicio
+        errors = self.ausencia.validate()
+        self.assertTrue(len(errors) > 0)
+
+    # --- new ---
+
+    def test_new_crea_ausencia_con_datos_validos(self):
+        inicio = timezone.now().date() + timedelta(days=10)
+        fin = timezone.now().date() + timedelta(days=12)
+        ausencia, errors = Ausencia.new(medico=self.medico, motivo="Vacaciones", fecha_inicio=inicio, fecha_fin=fin)
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(ausencia)
+        self.assertEqual(ausencia.motivo, "Vacaciones")
+        self.assertTrue(Ausencia.objects.filter(motivo="Vacaciones").exists())
+
+    # --- update ---
+
+    def test_update_modifica_datos_correctamente(self):
+        errors = self.ausencia.update(motivo="Enfermedad")
+        self.assertEqual(errors, [])
+        self.ausencia.refresh_from_db()
+        self.assertEqual(self.ausencia.motivo, "Enfermedad")
