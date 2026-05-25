@@ -89,6 +89,30 @@ class Medico(models.Model):
     # class Especialidad(models.Model): ...  ← extraer especialidad a FK
     # class Paciente(models.Model): ...
         
+'''---'''
+class EstadisticasClinicaQuerySet(models.QuerySet):
+    def metricas_del_dia(self) -> dict:
+        """Calcula en el servidor las estadísticas requeridas para la Home."""
+        hoy = timezone.now().date()
+        turnos_hoy = self.filter(fecha_hora__date=hoy)
+        return {
+            'total_turnos_hoy': turnos_hoy.count(),
+            'turnos_aceptados': turnos_hoy.filter(estado="ACEPTADO").count(),
+            'turnos_pendientes': turnos_hoy.filter(estado="PENDIENTE").count(),
+            'total_ausencias_activas': Ausencia.objects.filter(
+                fecha_inicio__lte=hoy, 
+                fecha_fin__gte=hoy
+            ).count()
+        }
+
+class ClinicaManager(models.Manager):
+    def get_queryset(self):
+        return EstadisticasClinicaQuerySet(self.model, def_using=self._db)
+
+    def obtener_panel_home(self) -> dict:
+        return self.get_queryset().metricas_del_dia()
+
+
     #FALTA IMPLEMENTAR ClinicaManager()    
     """MODELO TURNO"""
 class Turno(models.Model):
