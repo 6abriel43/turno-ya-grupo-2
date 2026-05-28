@@ -6,7 +6,7 @@ from django.utils import timezone
 
 class Medico(models.Model):
     """Representa a un profesional médico."""
-    
+
     usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name="medico")
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
@@ -23,75 +23,49 @@ class Medico(models.Model):
         return f"Dr/a. {self.apellido}, {self.nombre}"
 
 
-    def nombre_completo(self):
-        """Retorna nombre y apellido concatenados."""
+    def nombre_completo(self) -> str:
         return f"{self.nombre} {self.apellido}"
 
-    def cantidad_turnos(self):
+    def cantidad_turnos(self) -> int:
         """Retorna la cantidad total de turnos asociados a este médico."""
-        if not hasattr(self, "turno_set"):
+        if not hasattr(self, "turnos"):
             return 0
-        return self.turno_set.count()
+        return self.turnos.count()
 
     @classmethod
-    def validate(cls, nombre, apellido, matricula, especialidad):
-        """
-        Valida los datos del médico. Retorna una lista de errores.
-        Si la lista está vacía, los datos son válidos.
-        """
+    def validate(self) -> list[str]:
         errors = []
-
-        if not nombre or not nombre.strip():
-            errors.append("El nombre es obligatorio.")
-
-        if not apellido or not apellido.strip():
-            errors.append("El apellido es obligatorio.")
-
-        if not matricula or not matricula.strip():
-            errors.append("La matrícula es obligatoria.")
-
-        if not especialidad or not especialidad.strip():
-            errors.append("La especialidad es obligatoria.")
-
+        if not self.usuario: errors.append("El usuario es obligatorio.")
+        if not self.nombre or not self.nombre.strip(): errors.append("El nombre es obligatorio.")
+        if not self.apellido or not self.apellido.strip(): errors.append("El apellido es obligatorio.")
+        if not self.matricula or not self.matricula.strip(): errors.append("La matrícula es obligatoria.")
+        if not self.especialidad: errors.append("La especialidad es obligatoria.")
+        if not self.obra_social: errors.append("La obra social es obligatoria.")
         return errors
 
+
     @classmethod
-    def new(cls, nombre, apellido, matricula, especialidad):
-        """
-        Crea y persiste un nuevo médico si los datos son válidos.
-        Retorna (instancia, errors). Si hay errores, instancia es None.
-        """
-        errors = cls.validate(nombre, apellido, matricula, especialidad)
-        if errors:
-            return None, errors
+    def new(cls, **kwargs) -> tuple[Medico | None, list[str]]:
+        instancia = cls(**kwargs)
+        errors = instancia.validate()
+        if errors: return None, errors
+        if instancia.nombre: instancia.nombre = instancia.nombre.strip()
+        if instancia.apellido: instancia.apellido = instancia.apellido.strip()
+        if instancia.matricula: instancia.matricula = instancia.matricula.strip()
+        instancia.save()
+        return instancia, []
 
-        medico = cls.objects.create(
-            nombre=nombre.strip(),
-            apellido=apellido.strip(),
-            matricula=matricula.strip(),
-            especialidad=especialidad.strip(),
-        )
-        return medico, []
 
-    def update(self, nombre, apellido, matricula, especialidad):
-        """
-        Actualiza los datos del médico si los datos son válidos.
-        Retorna una lista de errores. Si está vacía, la actualización fue exitosa.
-        """
-        errors = self.__class__.validate(nombre, apellido, matricula, especialidad)
-        if errors:
-            return errors
-
-        self.nombre = nombre.strip()
-        self.apellido = apellido.strip()
-        self.matricula = matricula.strip()
-        self.especialidad = especialidad.strip()
+    def update(self, **kwargs) -> list[str]:
+        for key, value in kwargs.items(): setattr(self, key, value)
+        errors = self.validate()
+        if errors: return errors
+        if self.nombre: self.nombre = self.nombre.strip()
+        if self.apellido: self.apellido = self.apellido.strip()
+        if self.matricula: self.matricula = self.matricula.strip()
         self.save()
         return []
 
-    # TODO: Agregar los siguientes modelos:
-    # class Especialidad(models.Model): ...  ← extraer especialidad a FK
-    # class Paciente(models.Model): ...
         
 '''---'''
 class EstadisticasClinicaQuerySet(models.QuerySet):
