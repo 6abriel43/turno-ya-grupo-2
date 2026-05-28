@@ -5,19 +5,23 @@ from django.db import models
 from django.utils import timezone
 
 class Medico(models.Model):
-    """Representa a un profesional médico disponible para turnos."""
-
+    """Representa a un profesional médico."""
+    
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name="medico")
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     matricula = models.CharField(max_length=20, unique=True)
-    especialidad = models.CharField(max_length=100)
+    especialidad = models.ForeignKey(Especialidad, on_delete=models.PROTECT, related_name="medicos")
+    obra_social = models.ForeignKey(ObraSocial, on_delete=models.PROTECT, related_name="medicos")
 
     class Meta:
         ordering = ["apellido", "nombre"]
+        verbose_name = "Médico"
+        verbose_name_plural = "Médicos"
 
-    def __str__(self):
-        """Retorna una etiqueta legible para listados y admin."""
+    def __str__(self) -> str:
         return f"Dr/a. {self.apellido}, {self.nombre}"
+
 
     def nombre_completo(self):
         """Retorna nombre y apellido concatenados."""
