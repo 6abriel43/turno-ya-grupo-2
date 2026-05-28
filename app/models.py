@@ -66,7 +66,24 @@ class Medico(models.Model):
         self.save()
         return []
 
-        
+class Paciente(models.Model):
+    """Representa a un paciente."""
+    
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name="paciente")
+    nombre = models.CharField(max_length=100)
+    apellido = models.CharField(max_length=100)
+    dni = models.CharField(max_length=20, unique=True)
+    email = models.EmailField(blank=True, null=True)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    obra_social = models.ForeignKey(ObraSocial, on_delete=models.PROTECT, related_name="pacientes")
+
+    class Meta:
+        ordering = ["apellido", "nombre"]
+        verbose_name = "Paciente"
+        verbose_name_plural = "Pacientes"
+
+    def __str__(self) -> str:
+        return f"{self.apellido}, {self.nombre}"
 '''---'''
 class EstadisticasClinicaQuerySet(models.QuerySet):
     def metricas_del_dia(self) -> dict:
