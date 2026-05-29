@@ -89,6 +89,83 @@ class Medico(models.Model):
     # class Especialidad(models.Model): ...  ← extraer especialidad a FK
     # class Paciente(models.Model): ...
         
+
+class FranjaHoraria(models.Model):
+    """Representa un horario semanal de atencion."""
+
+    DIAS = [
+        ("LUN", "Lunes"),
+        ("MAR", "Martes"),
+        ("MIE", "Miercoles"),
+        ("JUE", "Jueves"),
+        ("VIE", "Viernes"),
+        ("SAB", "Sabado"),
+        ("DOM", "Domingo"),
+    ]
+
+    dia = models.CharField(max_length=3, choices=DIAS)
+    hora_inicio = models.TimeField()
+    hora_fin = models.TimeField()
+    medicos = models.ManyToManyField(Medico, related_name="franjas", blank=True)
+
+    class Meta:
+        ordering = ["dia", "hora_inicio"]
+        verbose_name_plural = "franjas horarias"
+
+    def __str__(self):
+        return f"{self.get_dia_display()} {self.hora_inicio} - {self.hora_fin}"
+
+    @classmethod
+    def validate(cls, dia, hora_inicio, hora_fin):
+        errors = []
+        dias_validos = [dia_valido[0] for dia_valido in cls.DIAS]
+
+        if not dia:
+            errors.append("El dia es obligatorio.")
+        elif dia not in dias_validos:
+            errors.append("El dia no es valido.")
+
+        if not hora_inicio:
+            errors.append("La hora de inicio es obligatoria.")
+
+        if not hora_fin:
+            errors.append("La hora de fin es obligatoria.")
+
+        if hora_inicio and hora_fin and hora_inicio >= hora_fin:
+            errors.append("La hora de inicio debe ser menor que la hora de fin.")
+
+        return errors
+
+    @classmethod
+    def new(cls, dia, hora_inicio, hora_fin):
+        errors = cls.validate(dia, hora_inicio, hora_fin)
+        if errors:
+            return None, errors
+
+        franja = cls.objects.create(
+            dia=dia,
+            hora_inicio=hora_inicio,
+            hora_fin=hora_fin,
+        )
+        return franja, []
+
+    def update(self, dia, hora_inicio, hora_fin):
+        errors = self.__class__.validate(dia, hora_inicio, hora_fin)
+        if errors:
+            return errors
+
+        self.dia = dia
+        self.hora_inicio = hora_inicio
+        self.hora_fin = hora_fin
+        self.save()
+        return []
+
+    def duracion_en_minutos(self):
+        minutos_inicio = self.hora_inicio.hour * 60 + self.hora_inicio.minute
+        minutos_fin = self.hora_fin.hour * 60 + self.hora_fin.minute
+        return minutos_fin - minutos_inicio
+
+
 '''---'''
 class EstadisticasClinicaQuerySet(models.QuerySet):
     def metricas_del_dia(self) -> dict:

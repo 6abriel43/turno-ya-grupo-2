@@ -1,17 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}Inicio — TurnoYa{% endblock %}
+{% block title %}Inicio - TurnoYa{% endblock %}
 
 {% block content %}
 <div class="row mb-4">
   <div class="col">
     <h1 class="h3">Panel de inicio</h1>
-    <p class="text-muted">Bienvenido al sistema de gestión de turnos médicos.</p>
+    <p class="text-muted">Resumen general de la clinica.</p>
   </div>
 </div>
 
-<!-- TODO: reemplazar con estadísticas reales del contexto -->
 <div class="row g-3">
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <p class="text-muted mb-1">Medicos</p>
+        <p class="h2 mb-0">{{ total_medicos|default:0 }}</p>
+      </div>
+    </div>
+  </div>
 
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <p class="text-muted mb-1">Turnos</p>
+        <p class="h2 mb-0">{{ total_turnos|default:0 }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <p class="text-muted mb-1">Pendientes</p>
+        <p class="h2 mb-0">{{ turnos_pendientes|default:0 }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <p class="text-muted mb-1">Aceptados</p>
+        <p class="h2 mb-0">{{ turnos_aceptados|default:0 }}</p>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
