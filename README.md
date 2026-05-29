@@ -34,10 +34,11 @@ Permite registrar médicos, pacientes y turnos, con autenticación de usuarios y
 
 | Nombre | Usuario GitHub |
 |--------|---------------|
-| ... | [@usuario](https://github.com/usuario) |
-| ... | [@usuario](https://github.com/usuario) |
-| ... | [@usuario](https://github.com/usuario) |
-
+| Gabriel Guitian | [@usuario](https://github.com/6abriel43) |
+| Fabrizio Verdu | [@usuario](https://github.com/Farvi-1986) |
+| Mateo Mazuela | [@usuario](https://github.com/soyMat) |
+| Facundo Zamora | [@usuario](https://github.com/Facunique) |
+| Luca Mechulan| [@usuario](https://github.com/iLuka103) |
 ---
 
 ## 🚀 Instalación y uso

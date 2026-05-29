@@ -1,32 +1,58 @@
 {% extends "base.html" %}
 
-{% block title %}Médicos — TurnoYa{% endblock %}
+{% block title %}Medicos - TurnoYa{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h2 class="h4">Médicos</h2>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+  <div>
+    <h2 class="h4 mb-1">Medicos</h2>
+    <p class="text-muted mb-0">Listado de profesionales de la clinica.</p>
+  </div>
 </div>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+  <div class="col-12 col-md-6 col-lg-4">
+    <label for="especialidad" class="form-label">Especialidad</label>
+    <select name="especialidad" id="especialidad" class="form-select">
+      <option value="">Todas</option>
+      {% for especialidad in especialidades %}
+        <option value="{{ especialidad }}" {% if especialidad == especialidad_seleccionada %}selected{% endif %}>
+          {{ especialidad }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-12 col-md-auto">
+    <button type="submit" class="btn btn-success w-100">Filtrar</button>
+  </div>
+  <div class="col-12 col-md-auto">
+    <a href="{% url 'app:lista_medicos' %}" class="btn btn-outline-secondary w-100">Limpiar</a>
+  </div>
+</form>
 
 <div class="table-responsive">
   <table class="table table-hover align-middle">
     <thead class="table-light">
       <tr>
-        <th>Apellido y nombre</th>
-        <th>Matrícula</th>
+        <th>Apellido</th>
+        <th>Nombre</th>
+        <th>Matricula</th>
         <th>Especialidad</th>
-        <!-- TODO: agregar columna de acciones cuando implementen detalle_medico -->
+        <th>Obra social</th>
       </tr>
     </thead>
     <tbody>
       {% for medico in medicos %}
       <tr>
-        <td>{{ medico }}</td>
+        <td>{{ medico.apellido }}</td>
+        <td>{{ medico.nombre }}</td>
         <td><code>{{ medico.matricula }}</code></td>
         <td>{{ medico.especialidad }}</td>
+        <td>{{ medico.obra_social|default:"-" }}</td>
       </tr>
       {% empty %}
       <tr>
-        <td colspan="3" class="text-center text-muted">No hay médicos cargados.</td>
+        <td colspan="5" class="text-center text-muted py-4">No hay medicos para mostrar.</td>
       </tr>
       {% endfor %}
     </tbody>
