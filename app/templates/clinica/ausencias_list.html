@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold text-dark">📋 Registro de Ausencias Médicas</h1>
+            <p class="text-muted">Control de licencias y disponibilidad del personal.</p>
+        </div>
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm">Volver al Home</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Médico</th>
+                        <th>Desde</th>
+                        <th>Hasta</th>
+                        <th>Motivo</th>
+                        <th class="text-center">Estado Actual</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ausencia in lista_ausencias %}
+                    <tr>
+                        <td class="fw-bold">{{ ausencia.medico }}</td>
+                        <td>{{ ausencia.fecha_inicio|date:"d/m/Y" }}</td>
+                        <td>{{ ausencia.fecha_fin|date:"d/m/Y" }}</td>
+                        <td><span class="text-muted">{{ ausencia.motivo }}</span></td>
+                        <td class="text-center">
+                            {% if ausencia.es_vigente %}
+                                <span class="badge bg-danger px-2 py-1">Ausente Hoy</span>
+                            {% else %}
+                                <span class="badge bg-secondary px-2 py-1">Finalizada</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            No hay ausencias registradas en el sistema.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
