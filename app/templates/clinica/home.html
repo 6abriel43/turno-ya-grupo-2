@@ -5,44 +5,65 @@
 {% block content %}
 <div class="row mb-4">
   <div class="col">
-    <h1 class="h3">Panel de inicio</h1>
-    <p class="text-muted">Resumen general de la clinica.</p>
+    <h1 class="h3 fw-bold text-primary">Panel de inicio</h1>
+    <p class="text-muted">Resumen general de la clínica para hoy: <strong>{{ fecha_hoy|date:"d/m/Y" }}</strong></p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card h-100 border-0 shadow-sm bg-light">
+      <div class="card-body">
+        <p class="text-muted mb-1 fw-bold small text-uppercase">Turnos Hoy</p>
+        <p class="h2 mb-0 fw-bold text-dark">{{ metrics.total_turnos_hoy|default:0 }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card h-100 border-0 shadow-sm bg-success bg-opacity-10">
+      <div class="card-body">
+        <p class="text-success mb-1 fw-bold small text-uppercase">Aceptados</p>
+        <p class="h2 mb-0 fw-bold text-success">{{ metrics.turnos_aceptados|default:0 }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card h-100 border-0 shadow-sm bg-warning bg-opacity-10">
+      <div class="card-body">
+        <p class="text-warning mb-1 fw-bold small text-uppercase">Pendientes</p>
+        <p class="h2 mb-0 fw-bold text-warning">{{ metrics.turnos_pendientes|default:0 }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card h-100 border-0 shadow-sm bg-danger bg-opacity-10">
+      <div class="card-body">
+        <p class="text-danger mb-1 fw-bold small text-uppercase">Médicos Ausentes</p>
+        <p class="h2 mb-0 fw-bold text-danger">{{ metrics.total_ausencias_activas|default:0 }}</p>
+      </div>
+    </div>
   </div>
 </div>
 
 <div class="row g-3">
-  <div class="col-12 col-sm-6 col-lg-3">
-    <div class="card h-100">
+  <div class="col-12 col-md-6">
+    <div class="card shadow-sm">
       <div class="card-body">
-        <p class="text-muted mb-1">Medicos</p>
-        <p class="h2 mb-0">{{ total_medicos|default:0 }}</p>
+        <h5 class="card-title fw-bold">📋 Registro de Ausencias</h5>
+        <p class="card-text text-muted small">Historial de licencias y carpetas médicas del personal.</p>
+        <a href="{% url 'lista_ausencias' %}" class="btn btn-primary btn-sm">Ver Ausencias</a>
       </div>
     </div>
   </div>
-
-  <div class="col-12 col-sm-6 col-lg-3">
-    <div class="card h-100">
+  <div class="col-12 col-md-6">
+    <div class="card shadow-sm">
       <div class="card-body">
-        <p class="text-muted mb-1">Turnos</p>
-        <p class="h2 mb-0">{{ total_turnos|default:0 }}</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-12 col-sm-6 col-lg-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <p class="text-muted mb-1">Pendientes</p>
-        <p class="h2 mb-0">{{ turnos_pendientes|default:0 }}</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-12 col-sm-6 col-lg-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <p class="text-muted mb-1">Aceptados</p>
-        <p class="h2 mb-0">{{ turnos_aceptados|default:0 }}</p>
+        <h5 class="card-title fw-bold">🔔 Panel de Recordatorios</h5>
+        <p class="card-text text-muted small">Seguimiento de las notificaciones de turnos enviadas.</p>
+        <a href="{% url 'lista_recordatorios' %}" class="btn btn-secondary btn-sm">Ver Notificaciones</a>
       </div>
     </div>
   </div>
