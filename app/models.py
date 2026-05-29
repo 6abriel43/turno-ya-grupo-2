@@ -70,6 +70,25 @@ class Medico(models.Model):
     # class Especialidad(models.Model): ...  ← extraer especialidad a FK
     # class Paciente(models.Model): ...
         
+    class Paciente(models.Model):
+        """Representa a un paciente."""
+
+        usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name="paciente")
+        nombre = models.CharField(max_length=100)
+        apellido = models.CharField(max_length=100)
+        dni = models.CharField(max_length=20, unique=True)
+        email = models.EmailField()
+        telefono = models.CharField(max_length=20, blank=True, default="")
+        obra_social = models.ForeignKey(ObraSocial, on_delete=models.PROTECT, related_name="pacientes")
+
+        class Meta:
+            ordering = ["apellido", "nombre"]
+            verbose_name = "Paciente"
+            verbose_name_plural = "Pacientes"
+
+        def __str__(self) -> str:
+            return f"{self.apellido}, {self.nombre}"
+
 
 class FranjaHoraria(models.Model):
     """Representa un horario semanal de atencion."""
