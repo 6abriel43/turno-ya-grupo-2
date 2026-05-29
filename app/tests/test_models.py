@@ -1,7 +1,7 @@
 """Pruebas unitarias del modelo Medico."""
 
 from django.test import TestCase
-from app.models import Medico, Turno, Paciente , Ausencia , Recordatorio  #Agregar imports de modelos faltantes
+from app.models import Especialidad, Medico, ObraSocial, Turno, Paciente , Ausencia , Recordatorio  #Agregar imports de modelos faltantes
 from django.utils import timezone
 from datetime import timedelta
 
@@ -9,11 +9,18 @@ class MedicoModelTest(TestCase):
     """Verifica comportamiento básico y validaciones del modelo."""
 
     def setUp(self):
+        
+        self.user = User.objects.create_user(username="lromero", password="test1234")  # Usuario para el médico
+        self.especialidad = Especialidad.objects.create(nombre="Pediatría")  # Especialidad para el médico
+        self.obra_social = ObraSocial.objects.create(nombre="OSDE")  # Obra social para el médico
+
         self.medico = Medico.objects.create(
+            usuario=self.user,
             nombre="Laura",
             apellido="Romero",
             matricula="MP-9999",
-            especialidad="Pediatría",
+            especialidad=self.especialidad,
+            obra_social=self.obra_social
         )
 
     # --- __str__ y métodos simples ---

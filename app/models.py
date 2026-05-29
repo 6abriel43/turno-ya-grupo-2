@@ -32,8 +32,8 @@ class Medico(models.Model):
             return 0
         return self.turnos.count()
 
-    @classmethod
     def validate(self) -> list[str]:
+        # Valida los datos del médico, retorna una lista de errores o una lista vacía si no hay errores.
         errors = []
         if not self.usuario: errors.append("El usuario es obligatorio.")
         if not self.nombre or not self.nombre.strip(): errors.append("El nombre es obligatorio.")
@@ -90,6 +90,7 @@ class Medico(models.Model):
             return f"{self.apellido}, {self.nombre}"
 
         def validate(self) -> list[str]:
+            # Valida los datos del paciente, retorna una lista de errores o una lista vacía si no hay errores.
             errors = []
             if not self.usuario: errors.append("El usuario es obligatorio.")
             if not self.nombre or not self.nombre.strip(): errors.append("El nombre es obligatorio.")
