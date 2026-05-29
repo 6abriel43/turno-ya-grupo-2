@@ -38,21 +38,52 @@ class MedicoModelTest(TestCase):
     # --- validate ---
 
     def test_validate_datos_correctos_retorna_lista_vacia(self):
-        errors = Medico.validate("Ana", "García", "MP-0001", "Cardiología")
+        medico_test = Medico(
+            usuario=self.user,
+            nombre="Ana",
+            apellido="García",
+            matricula="MP-0001",
+            especialidad=self.especialidad,
+            obra_social=self.obra_social
+        )
+        errors = medico_test.validate()
         self.assertEqual(errors, [])
 
     def test_validate_nombre_vacio_retorna_error(self):
-        errors = Medico.validate("", "García", "MP-0001", "Cardiología")
-        self.assertTrue(len(errors) > 0)
+        medico_test = Medico(
+            usuario=self.user,
+            nombre="",
+            apellido="García",
+            matricula="MP-0001",
+            especialidad=self.especialidad,
+            obra_social=self.obra_social
+        )
+        errors = medico_test.validate()
+        self.assertIn("El nombre es obligatorio.", errors)
 
     def test_validate_matricula_vacia_retorna_error(self):
-        errors = Medico.validate("Ana", "García", "", "Cardiología")
-        self.assertTrue(len(errors) > 0)
+        medico_test = Medico(
+            usuario=self.user,
+            nombre="Ana",
+            apellido="García",
+            matricula="",
+            especialidad=self.especialidad,
+            obra_social=self.obra_social
+        )
+        errors = medico_test.validate()
+        self.assertIn("La matrícula es obligatoria.", errors)
 
     # --- new ---
 
     def test_new_crea_medico_con_datos_validos(self):
-        medico, errors = Medico.new("Carlos", "López", "MP-1234", "Clínica Médica")
+        medico, errors = Medico.new(
+            usuario=self.user,
+            nombre="Carlos",
+            apellido="López",
+            matricula="MP-1234",
+            especialidad=self.especialidad,
+            obra_social=self.obra_social
+        )
         self.assertEqual(errors, [])
         self.assertIsNotNone(medico)
         self.assertEqual(medico.apellido, "López")
@@ -60,7 +91,14 @@ class MedicoModelTest(TestCase):
 
     def test_new_con_datos_invalidos_retorna_errores_y_no_crea(self):
         count_antes = Medico.objects.count()
-        medico, errors = Medico.new("", "", "", "")
+        medico, errors = Medico.new(
+            usuario=self.user,
+            nombre="",
+            apellido="",
+            matricula="",
+            especialidad=self.especialidad,
+            obra_social=self.obra_social
+        )
         self.assertIsNone(medico)
         self.assertTrue(len(errors) > 0)
         self.assertEqual(Medico.objects.count(), count_antes)
@@ -68,18 +106,28 @@ class MedicoModelTest(TestCase):
     # --- update ---
 
     def test_update_modifica_datos_correctamente(self):
-        errors = self.medico.update("Laura", "Romero", "MP-9999", "Cardiología")
+        nueva_especialidad = Especialidad.objects.create(nombre="Cardiología")
+        errors = self.medico.update(
+            nombre= "Laura",
+            apellido= "Romero",
+            matricula= "MP-9999",
+            especialidad= nueva_especialidad,
+            obra_social= self.obra_social
+        )
         self.assertEqual(errors, [])
         self.medico.refresh_from_db()
         self.assertEqual(self.medico.especialidad, "Cardiología")
 
     def test_update_con_datos_invalidos_no_modifica(self):
-        errors = self.medico.update("", "", "", "")
+        errors = self.medico.update(nombre="")
         self.assertTrue(len(errors) > 0)
         self.medico.refresh_from_db()
-        self.assertEqual(self.medico.nombre, "Laura")  # sin cambios
+        self.assertEqual(self.medico.nombre, "Laura")  # El nombre no debería haber cambiado
 
     # TODO: agregar tests para Paciente y Turno cuando los implementen
+
+
+    
 class TurnoModelTest(TestCase):
 
     """TESTS DE MODELO TURNO"""
