@@ -1,51 +1,39 @@
-"""Vistas iniciales para navegar medicos y pantalla de inicio."""
+"""Vistas iniciales para navegar médicos y pantalla de inicio."""
 
 from django.views.generic import ListView, TemplateView, CreateView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Medico, Turno
 from .forms import TurnoForm #formulario hecho en forms.py
+from django.utils import timezone
 
 class HomeView(TemplateView):
-    """Vista de inicio con estadisticas generales."""
-
+    """Vista de inicio de la clínica potenciada con las estadísticas de tu Manager."""
     template_name = "clinica/home.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["total_medicos"] = Medico.objects.count()
-        context["total_turnos"] = Turno.objects.count()
-        context["turnos_pendientes"] = Turno.objects.filter(estado="PENDIENTE").count()
-        context["turnos_aceptados"] = Turno.objects.filter(estado="ACEPTADO").count()
+        # Importación local para evitar importes circulares entre archivos
+        from .models import Turno 
+        
+        try:
+            context['metrics'] = Turno.analitica.obtener_panel_home()
+        except AttributeError:
+            context['metrics'] = {
+                'total_turnos_hoy': 0,
+                'turnos_aceptados': 0,
+                'turnos_pendientes': 0,
+                'total_ausencias_activas': 0
+            }
+        context['fecha_hoy'] = timezone.now().date()
         return context
 
-
-class ListaMedicosView(LoginRequiredMixin, ListView):
-    """Lista medicos con filtro por especialidad."""
+class ListaMedicosView(ListView):
+    """Lista todos los médicos."""
 
     model = Medico
     template_name = "clinica/lista_medicos.html"
     context_object_name = "medicos"
-
-    def get_queryset(self):
-        medicos = Medico.objects.all().order_by("apellido", "nombre")
-        especialidad = self.request.GET.get("especialidad", "")
-
-        if especialidad:
-            medicos = medicos.filter(especialidad=especialidad)
-
-        return medicos
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["especialidades"] = (
-            Medico.objects.exclude(especialidad="")
-            .values_list("especialidad", flat=True)
-            .distinct()
-            .order_by("especialidad")
-        )
-        context["especialidad_seleccionada"] = self.request.GET.get("especialidad", "")
-        return context
 
 
 # TODO: implementar las siguientes vistas:
@@ -62,6 +50,7 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('lista_turnos') # Cambia 'lista_turnos' por el nombre de URL de listado
 
     def form_valid(self, form):
-        # comentario simple para debug
-        print(f"Se esta creando un turno para el medico: {form.cleaned_data['medico']}")
+        # Opcional: imprimir en consola para debug como pide la guía avanzada
+        print(f"Se está creando un turno para el médico: {form.cleaned_data['medico']}")
         return super().form_valid(form)
+    
