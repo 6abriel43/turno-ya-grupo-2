@@ -89,6 +89,40 @@ class Medico(models.Model):
         def __str__(self) -> str:
             return f"{self.apellido}, {self.nombre}"
 
+        def validate(self) -> list[str]:
+            errors = []
+            if not self.usuario: errors.append("El usuario es obligatorio.")
+            if not self.nombre or not self.nombre.strip(): errors.append("El nombre es obligatorio.")
+            if not self.apellido or not self.apellido.strip(): errors.append("El apellido es obligatorio.")
+            if not self.dni or not self.dni.strip(): errors.append("El DNI es obligatorio.")
+            if not self.dni.isdigit(): errors.append("El DNI debe contener solo números.")
+            if not self.obra_social: errors.append("La obra social es obligatoria.")
+            return errors
+
+        @classmethod
+        def new(cls, **kwargs) -> tuple[Paciente | None, list[str]]:
+            instancia = cls(**kwargs)
+            errors = instancia.validate()
+            if errors: return None, errors
+            if instancia.nombre: instancia.nombre = instancia.nombre.strip()
+            if instancia.apellido: instancia.apellido = instancia.apellido.strip()
+            if instancia.dni: instancia.dni = instancia.dni.strip()
+            if instancia.email: instancia.email = instancia.email.strip()
+            if instancia.telefono: instancia.telefono = instancia.telefono.strip()
+            instancia.save()
+            return instancia, []
+
+        def update(self, **kwargs) -> list[str]:
+            for key, value in kwargs.items(): setattr(self, key, value)
+            errors = self.validate()
+            if errors: return errors
+            if self.nombre: self.nombre = self.nombre.strip()
+            if self.apellido: self.apellido = self.apellido.strip()
+            if self.dni: self.dni = self.dni.strip()
+            if self.email: self.email = self.email.strip()
+            if self.telefono: self.telefono = self.telefono.strip()
+            self.save()
+            return []
 
 class FranjaHoraria(models.Model):
     """Representa un horario semanal de atencion."""
