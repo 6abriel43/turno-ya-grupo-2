@@ -54,3 +54,20 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
         print(f"Se está creando un turno para el médico: {form.cleaned_data['medico']}")
         return super().form_valid(form)
     
+
+'''VISTAS AUSENCIA + RECORDATORIO'''
+class AusenciaListView(ListView):
+    """Vista para listar el historial de ausencias del personal médico."""
+    from .models import Ausencia
+    model = Ausencia
+    template_name = "clinica/ausencias_list.html"
+    context_object_name = "lista_ausencias"
+    ordering = ['-fecha_inicio']
+
+class RecordatorioListView(ListView):
+    """Vista para el panel de control y seguimiento de recordatorios."""
+    from .models import Recordatorio
+    model = Recordatorio
+    template_name = "clinica/recordatorios_list.html"
+    context_object_name = "lista_recordatorios"
+    ordering = ['-fecha_envio']
