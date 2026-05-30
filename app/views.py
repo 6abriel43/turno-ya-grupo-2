@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Medico, Turno
 from .forms import TurnoForm #formulario hecho en forms.py
 from django.utils import timezone
+from django.contrib.auth.forms import UserCreationForm
 
 class HomeView(TemplateView):
     """Vista de inicio de la clínica potenciada con las estadísticas de tu Manager."""
@@ -71,3 +72,14 @@ class RecordatorioListView(ListView):
     template_name = "clinica/recordatorios_list.html"
     context_object_name = "lista_recordatorios"
     ordering = ['-fecha_envio']
+
+class RegistroUsuarioView(CreateView):
+    """Vista basada en clase para el alta de nuevos usuarios en el sistema."""
+    form_class = UserCreationForm
+    template_name = 'registration/registro.html'
+    success_url = reverse_lazy('app:home')
+
+    def form_valid(self, form):
+        """Pipeline de éxito cuando el formulario pasa las validaciones."""
+        response = super().form_valid(form)
+        return response
