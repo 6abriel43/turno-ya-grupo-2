@@ -36,6 +36,28 @@ class ListaMedicosView(LoginRequiredMixin, ListView):
     template_name = "clinica/lista_medicos.html"
     context_object_name = "medicos"
 
+    def get_queryset(self):
+        """Permite filtrar por especialidad y obra social."""
+        queryset = super().get_queryset()
+        especialidad = self.request.GET.get('especialidad')
+        obra_social = self.request.GET.get('obra_social')
+
+        if especialidad:
+            queryset = queryset.filter(especialidad__id=especialidad)
+        if obra_social:
+            queryset = queryset.filter(obra_social__id=obra_social)
+
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        """Agrega al contexto las listas de especialidades y obras sociales para los filtros."""
+        context = super().get_context_data(**kwargs)
+        from .models import Especialidad, ObraSocial
+        context['especialidades'] = Especialidad.objects.all()
+        context['obras_sociales'] = ObraSocial.objects.all()
+        return context
+    
+
 
 # TODO: implementar las siguientes vistas:
 # class DetalleMedicoView(...): ...
