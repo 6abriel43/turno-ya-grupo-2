@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Pacientes - TurnoYa{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+  <div>
+    <h2 class="h4 mb-1">Pacientes</h2>
+    <p class="text-muted mb-0">Listado de pacientes registrados en la clínica.</p>
+  </div>
+  <div>
+    <a href="#" class="btn btn-primary">Nuevo Paciente </a>
+  </div>
+</div>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+  <div class="col-12 col-md-6 col-lg-4">
+    <label for="q" class="form-label">Buscar pacientes</label>
+    <input type="text" name="q" id="q" class="form-control" placeholder="DNI o Apellido..." value="{{ request.GET.q }}">
+  </div>
+  <div class="col-12 col-md-auto">
+    <button type="submit" class="btn btn-success w-100">Buscar</button>
+  </div>
+  <div class="col-12 col-md-auto">
+    <a href="{% url 'app:lista_pacientes' %}" class="btn btn-outline-secondary w-100">Limpiar</a>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>DNI</th>
+        <th>Apellido</th>
+        <th>Nombre</th>
+        <th>Obra social</th>
+        <th>Teléfono</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for paciente in pacientes %}
+      <tr>
+        <td><code>{{ paciente.dni }}</code></td>
+        <td>{{ paciente.apellido }}</td>
+        <td>{{ paciente.nombre }}</td>
+        <td>{{ paciente.obra_social.nombre|default:"-" }}</td>
+        <td>{{ paciente.telefono|default:"-" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="text-center text-muted py-4">No se encontraron pacientes con esos datos.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
