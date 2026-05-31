@@ -1,9 +1,9 @@
 """Vistas iniciales para navegar médicos y pantalla de inicio."""
 
-from django.views.generic import ListView, TemplateView, CreateView
+from django.views.generic import ListView, TemplateView, CreateView, View
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Medico, Turno
+from .models import Medico, Turno, Paciente
 from .forms import TurnoForm #formulario hecho en forms.py
 from django.utils import timezone
 
@@ -28,7 +28,7 @@ class HomeView(TemplateView):
         context['fecha_hoy'] = timezone.now().date()
         return context
 
-class ListaMedicosView(ListView):
+class ListaMedicosView(LoginRequiredMixin, ListView):
     """Lista todos los médicos."""
 
     model = Medico
@@ -42,6 +42,21 @@ class ListaMedicosView(ListView):
 # class NuevoTurnoView(...): ...
 # class CancelarTurnoView(...): ...
 # class ListaPacientesView(...): ...
+
+class DetalleMedicoView(LoginRequiredMixin, TemplateView):
+    """Muestra el detalle de un médico específico."""
+
+    model = Medico
+    template_name = "clinica/detalle_medico.html"
+    context_object_name = "medico"
+
+class ListaPacientesView(LoginRequiredMixin, ListView):
+    """Lista todos los pacientes."""
+
+    model = Paciente
+    template_name = "clinica/lista_pacientes.html"
+    context_object_name = "pacientes"
+
 
 class TurnoCreateView(LoginRequiredMixin, CreateView):
     model = Turno
