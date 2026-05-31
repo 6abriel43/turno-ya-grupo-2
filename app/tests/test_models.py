@@ -4,6 +4,8 @@ from django.test import TestCase
 from app.models import Especialidad, Medico, ObraSocial, Turno, Paciente , Ausencia , Recordatorio  #Agregar imports de modelos faltantes
 from django.utils import timezone
 from datetime import timedelta
+from django.contrib.auth.models import User
+
 
 class MedicoModelTest(TestCase):
     """Verifica comportamiento básico y validaciones del modelo."""
@@ -126,8 +128,148 @@ class MedicoModelTest(TestCase):
 
     # TODO: agregar tests para Paciente y Turno cuando los implementen
 
+class PacienteModelTest(TestCase):
 
-    
+    """TESTS DE MODELO PACIENTE"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="mgomez", password="test1234")  # Usuario para el paciente
+        self.obra_social = ObraSocial.objects.create(nombre="OSDE")  # Obra social para el paciente
+        
+        self.paciente = Paciente.objects.create(
+            usuario=self.user,
+            nombre="Maria", 
+            apellido="Gomez",
+            dni="12345678",
+            email="maria.gomez@mail.com",
+            telefono="123456789",
+            obra_social=self.obra_social
+        )
+
+    def test_str_incluye_apellido_y_nombre(self):
+        """"Verifica que el método __str__ del paciente incluya su apellido y nombre."""
+        self.assertIn("Gomez", str(self.paciente))
+        self.assertIn("Maria", str(self.paciente))
+
+# --- validate ---
+
+    def test_validate_datos_correctos_retorna_lista_vacia(self):
+        """Verifica que el método validate retorne una lista vacía cuando los datos son correctos."""
+        paciente_test = Paciente(
+            usuario=self.user,
+            nombre="Carlos", 
+            apellido="López",
+            dni="87654321",
+            email="carlos.lopez@mail.com",
+            telefono="987654321",
+            obra_social=self.obra_social
+        )
+        errors = paciente_test.validate()
+        self.assertEqual(errors, [])
+
+        def test_validate_dni_con_letras_retorna_error(self):
+            """Verifica que el método validate retorne un error cuando el DNI contiene letras."""
+            paciente_test = Paciente(
+                usuario=self.user,
+                nombre="Carlos", 
+                apellido="López",
+                dni="ABC12345",  # DNI con letras
+                email="carlos.lopez@mail.com",
+                telefono="987654321",
+                obra_social=self.obra_social
+            )
+            errors = paciente_test.validate()
+            self.assertIn("El DNI debe contener solo números.", errors)
+
+        def test_validate_campos_obligatorios_vacios_retorna_errores(self):
+            """Verifica que el método validate retorne errores cuando los campos obligatorios están vacíos."""
+            paciente_test = Paciente(
+                usuario=self.user,
+                nombre="",  # Nombre vacío
+                apellido="",  # Apellido vacío
+                dni="",  # DNI vacío
+                email="",  # Email vacío
+                telefono="",  # Teléfono vacío
+                obra_social=self.obra_social
+            )
+            errors = paciente_test.validate()
+            self.assertIn("El nombre es obligatorio.", errors)
+            self.assertIn("El apellido es obligatorio.", errors)
+            self.assertIn("El DNI es obligatorio.", errors)
+            self.assertIn("El email es obligatorio.", errors)
+            self.assertIn("El teléfono es obligatorio.", errors)
+            self.assertIn("La obra social es obligatoria.", errors)
+
+# --- new ---
+    def test_new_crea_paciente_y_limpiamos_campos(self):
+        paciente, errors = Paciente.new(
+            usuario=self.user,
+            nombre="Carlos", 
+            apellido="López",
+            dni="87654321",
+            email="carlos.lopez@mail.com",
+            telefono="987654321",
+            obra_social=self.obra_social
+        )
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(paciente)
+
+        self.assertEqual(paciente.nombre, "Carlos")
+        self.assertEqual(paciente.apellido, "López")
+        self.assertEqual(paciente.dni, "87654321")
+        self.assertEqual(paciente.email, "carlos.lopez@mail.com")
+        self.assertEqual(paciente.telefono, "987654321")
+        self.assertEqual(paciente.obra_social, self.obra_social)
+
+        self.assertTrue(Paciente.objects.filter(dni="87654321").exists())
+
+    def test_new_invalido_retorna_errores_y_no_persiste(self):
+        """Un intento de creación con datos sucios aborta el guardado y retorna errores."""
+        user_falla = User.objects.create_user(username="cfalla", password="test1234")
+        count_antes = Paciente.objects.count()
+
+        paciente, errors = Paciente.new(
+            usuario=user_falla,
+            nombre="",  # Nombre vacío
+            apellido="",  # Apellido vacío
+            dni="ABC12345",  # DNI con letras
+            email="",  # Email vacío
+            telefono="",  # Teléfono vacío
+            obra_social=self.obra_social
+        )
+        self.assertIsNone(paciente)
+        self.assertTrue(len(errors) >= 2) # Debería haber varios errores
+        self.assertEqual(Paciente.objects.count(), count_antes)
+
+# --- update ---
+
+    def test_update_modifica_datos_correctamente(self):
+        """Modifica atributos validos y los guarda."""
+        errors = self.paciente.update(
+            nombre="Carlos", 
+            apellido="López",
+            dni="87654321",
+            email="carlos.lopez@mail.com",
+            telefono="987654321",
+            obra_social=self.obra_social
+        )
+        self.assertEqual(errors, [])
+        self.paciente.refresh_from_db()
+        self.assertEqual(self.paciente.nombre, "Carlos")
+        self.assertEqual(self.paciente.apellido, "López")
+        self.assertEqual(self.paciente.dni, "87654321")
+        self.assertEqual(self.paciente.email, "carlos.lopez@mail.com")
+        self.assertEqual(self.paciente.telefono, "987654321")
+        self.assertEqual(self.paciente.obra_social, self.obra_social)
+
+    def test_update_invalido_retiene_datos_originales(self):
+        """Un update con un DNI inválido frena la operación y no modifica los datos."""
+        errors = self.paciente.update(dni="ABC12345")  # DNI con letras
+        self.assertIn("El DNI debe contener solo números.", errors)
+
+        self.paciente.refresh_from_db()
+        self.assertEqual(self.paciente.dni, "12345678")  # El DNI no debería haber cambiado
+
 class TurnoModelTest(TestCase):
 
     """TESTS DE MODELO TURNO"""

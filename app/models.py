@@ -3,6 +3,7 @@
 from __future__ import annotations
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 class Medico(models.Model):
     """Representa a un profesional médico."""
