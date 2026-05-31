@@ -1,12 +1,13 @@
 """Vistas iniciales para navegar médicos y pantalla de inicio."""
 
-from django.views.generic import ListView, TemplateView, CreateView
+from django.views.generic import ListView, TemplateView, CreateView, View
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Medico, Turno
+from .models import Medico, Turno, Paciente
 from .forms import TurnoForm #formulario hecho en forms.py
 from django.utils import timezone
 from django.contrib.auth.forms import UserCreationForm
+from django.db.models import Q
 
 class HomeView(TemplateView):
     """Vista de inicio de la clínica potenciada con las estadísticas de tu Manager."""
@@ -29,12 +30,34 @@ class HomeView(TemplateView):
         context['fecha_hoy'] = timezone.now().date()
         return context
 
-class ListaMedicosView(ListView):
+class ListaMedicosView(LoginRequiredMixin, ListView):
     """Lista todos los médicos."""
 
     model = Medico
     template_name = "clinica/lista_medicos.html"
     context_object_name = "medicos"
+
+    def get_queryset(self):
+        """Permite filtrar por especialidad y obra social."""
+        queryset = super().get_queryset()
+        especialidad = self.request.GET.get('especialidad')
+        obra_social = self.request.GET.get('obra_social')
+
+        if especialidad:
+            queryset = queryset.filter(especialidad__id=especialidad)
+        if obra_social:
+            queryset = queryset.filter(obra_social__id=obra_social)
+
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        """Agrega al contexto las listas de especialidades y obras sociales para los filtros."""
+        context = super().get_context_data(**kwargs)
+        from .models import Especialidad, ObraSocial
+        context['especialidades'] = Especialidad.objects.all()
+        context['obras_sociales'] = ObraSocial.objects.all()
+        return context
+    
 
 
 # TODO: implementar las siguientes vistas:
@@ -43,6 +66,33 @@ class ListaMedicosView(ListView):
 # class NuevoTurnoView(...): ...
 # class CancelarTurnoView(...): ...
 # class ListaPacientesView(...): ...
+
+class DetalleMedicoView(LoginRequiredMixin, TemplateView):
+    """Muestra el detalle de un médico específico."""
+
+    model = Medico
+    template_name = "clinica/detalle_medico.html"
+    context_object_name = "medico"
+
+class ListaPacientesView(LoginRequiredMixin, ListView):
+    """Lista todos los pacientes."""
+
+    model = Paciente
+    template_name = "clinica/lista_pacientes.html"
+    context_object_name = "pacientes"
+
+    def get_queryset(self):
+        """Permite filtrar por DNI o apellido."""
+        queryset = super().get_queryset()
+        query = self.request.GET.get('q')
+
+        if query:
+            queryset = queryset.filter(
+                Q(dni__icontains=query) | Q(apellido__icontains=query)
+            )
+
+        return queryset
+
 
 class TurnoCreateView(LoginRequiredMixin, CreateView):
     model = Turno

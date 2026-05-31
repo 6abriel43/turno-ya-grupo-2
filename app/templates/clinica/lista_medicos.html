@@ -16,8 +16,8 @@
     <select name="especialidad" id="especialidad" class="form-select">
       <option value="">Todas</option>
       {% for especialidad in especialidades %}
-        <option value="{{ especialidad }}" {% if especialidad == especialidad_seleccionada %}selected{% endif %}>
-          {{ especialidad }}
+        <option value="{{ especialidad.id }}" {% if especialidad.id|stringformat:"s" == especialidad_seleccionada %}selected{% endif %}>
+          {{ especialidad.nombre }}
         </option>
       {% endfor %}
     </select>
@@ -47,8 +47,8 @@
         <td>{{ medico.apellido }}</td>
         <td>{{ medico.nombre }}</td>
         <td><code>{{ medico.matricula }}</code></td>
-        <td>{{ medico.especialidad }}</td>
-        <td>{{ medico.obra_social|default:"-" }}</td>
+        <td>{{ medico.especialidad.nombre }}</td>
+        <td>{{ medico.obra_social.nombre|default:"-" }}</td>
       </tr>
       {% empty %}
       <tr>
