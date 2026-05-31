@@ -2,13 +2,13 @@
 
 from django.urls import path
 from . import views
-from .views import TurnoCreateView, MedicoDetailView, ListaPacientesView
+from .views import ListaMedicosView, TurnoCreateView, MedicoDetailView, ListaPacientesView
 
 app_name = "app"
 
 urlpatterns = [
     path("", views.HomeView.as_view(), name="home"),
-    path("medicos/", views.ListaMedicosView.as_view(), name="lista_medicos"),
+    path("medicos/", ListaMedicosView.as_view(), name="lista_medicos"),
     path("medicos/<int:pk>/", views.DetalleMedicoView.as_view(), name="detalle_medico"),
     path("pacientes/", ListaPacientesView.as_view(), name="lista_pacientes"),
 

@@ -7,6 +7,7 @@ from .models import Medico, Turno, Paciente
 from .forms import TurnoForm #formulario hecho en forms.py
 from django.utils import timezone
 from django.contrib.auth.forms import UserCreationForm
+from django.db.models import Q
 
 class HomeView(TemplateView):
     """Vista de inicio de la clínica potenciada con las estadísticas de tu Manager."""
@@ -79,6 +80,18 @@ class ListaPacientesView(LoginRequiredMixin, ListView):
     model = Paciente
     template_name = "clinica/lista_pacientes.html"
     context_object_name = "pacientes"
+
+    def get_queryset(self):
+        """Permite filtrar por DNI o apellido."""
+        queryset = super().get_queryset()
+        query = self.request.GET.get('q')
+
+        if query:
+            queryset = queryset.filter(
+                Q(dni__icontains=query) | Q(apellido__icontains=query)
+            )
+
+        return queryset
 
 
 class TurnoCreateView(LoginRequiredMixin, CreateView):
