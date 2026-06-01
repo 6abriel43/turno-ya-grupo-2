@@ -67,10 +67,7 @@ class Medico(models.Model):
         self.save()
         return []
 
-    # TODO: Agregar los siguientes modelos:
-    # class Especialidad(models.Model): ...  ← extraer especialidad a FK
-    # class Paciente(models.Model): ...
-        
+    
     class Paciente(models.Model):
         """Representa a un paciente."""
 
@@ -125,6 +122,10 @@ class Medico(models.Model):
             if self.telefono: self.telefono = self.telefono.strip()
             self.save()
             return []
+
+        def obtener_nombre_completo(self) -> str:
+            """Retorna el nombre completo en formato natural (Nombre Apellido)."""
+            return f"{self.nombre} {self.apellido}".strip()
 
 class FranjaHoraria(models.Model):
     """Representa un horario semanal de atencion."""
@@ -341,6 +342,10 @@ class Especialidad(models.Model):
         self.save()
         return []
     
+    def tiene_detalles(self) -> bool:
+        """Determina si la especialidad cuenta con una descripción cargada."""
+        return bool(self.descripcion and self.descripcion.strip())
+    
 class ObraSocial(models.Model):
     """Representa la cobertura médica del paciente (Ej: OSDE, PAMI)."""
 
@@ -396,6 +401,10 @@ class ObraSocial(models.Model):
         self.sigla = sigla.strip().upper() if sigla else None
         self.save()
         return []
+    
+    def obtener_identificador_comercial(self) -> str:
+        """Retorna la sigla si existe, de lo contrario el nombre completo."""
+        return self.sigla if self.sigla else self.nombre
     
 ''''MODELO AUSENCIA + RECORDATORIO'''
 

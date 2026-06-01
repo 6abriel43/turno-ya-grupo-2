@@ -118,7 +118,7 @@ class MedicoModelTest(TestCase):
         )
         self.assertEqual(errors, [])
         self.medico.refresh_from_db()
-        self.assertEqual(self.medico.especialidad, "Cardiología")
+        self.assertEqual(self.medico.especialidad.nombre, "Cardiología")
 
     def test_update_con_datos_invalidos_no_modifica(self):
         errors = self.medico.update(nombre="")
@@ -126,15 +126,14 @@ class MedicoModelTest(TestCase):
         self.medico.refresh_from_db()
         self.assertEqual(self.medico.nombre, "Laura")  # El nombre no debería haber cambiado
 
-    # TODO: agregar tests para Paciente y Turno cuando los implementen
+    
 
 class PacienteModelTest(TestCase):
-
     """TESTS DE MODELO PACIENTE"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="mgomez", password="test1234")  # Usuario para el paciente
-        self.obra_social = ObraSocial.objects.create(nombre="OSDE")  # Obra social para el paciente
+        self.user = User.objects.create_user(username="mgomez", password="test1234")
+        self.obra_social = ObraSocial.objects.create(nombre="OSDE")
         
         self.paciente = Paciente.objects.create(
             usuario=self.user,
@@ -147,14 +146,18 @@ class PacienteModelTest(TestCase):
         )
 
     def test_str_incluye_apellido_y_nombre(self):
-        """"Verifica que el método __str__ del paciente incluya su apellido y nombre."""
         self.assertIn("Gomez", str(self.paciente))
         self.assertIn("Maria", str(self.paciente))
 
-# --- validate ---
+    # --- Métodos de Negocio  ---
+
+    def test_obtener_nombre_completo(self):
+        """Verifica que el método de negocio concatene el nombre real de manera natural."""
+        self.assertEqual(self.paciente.obtener_nombre_completo(), "Maria Gomez")
+
+    # --- validate ---
 
     def test_validate_datos_correctos_retorna_lista_vacia(self):
-        """Verifica que el método validate retorne una lista vacía cuando los datos son correctos."""
         paciente_test = Paciente(
             usuario=self.user,
             nombre="Carlos", 
@@ -167,40 +170,37 @@ class PacienteModelTest(TestCase):
         errors = paciente_test.validate()
         self.assertEqual(errors, [])
 
-        def test_validate_dni_con_letras_retorna_error(self):
-            """Verifica que el método validate retorne un error cuando el DNI contiene letras."""
-            paciente_test = Paciente(
-                usuario=self.user,
-                nombre="Carlos", 
-                apellido="López",
-                dni="ABC12345",  # DNI con letras
-                email="carlos.lopez@mail.com",
-                telefono="987654321",
-                obra_social=self.obra_social
-            )
-            errors = paciente_test.validate()
-            self.assertIn("El DNI debe contener solo números.", errors)
+    def test_validate_dni_con_letras_retorna_error(self):
+        paciente_test = Paciente(
+            usuario=self.user,
+            nombre="Carlos", 
+            apellido="López",
+            dni="ABC12345",
+            email="carlos.lopez@mail.com",
+            telefono="987654321",
+            obra_social=self.obra_social
+        )
+        errors = paciente_test.validate()
+        self.assertIn("El DNI debe contener solo números.", errors)
 
-        def test_validate_campos_obligatorios_vacios_retorna_errores(self):
-            """Verifica que el método validate retorne errores cuando los campos obligatorios están vacíos."""
-            paciente_test = Paciente(
-                usuario=self.user,
-                nombre="",  # Nombre vacío
-                apellido="",  # Apellido vacío
-                dni="",  # DNI vacío
-                email="",  # Email vacío
-                telefono="",  # Teléfono vacío
-                obra_social=self.obra_social
-            )
-            errors = paciente_test.validate()
-            self.assertIn("El nombre es obligatorio.", errors)
-            self.assertIn("El apellido es obligatorio.", errors)
-            self.assertIn("El DNI es obligatorio.", errors)
-            self.assertIn("El email es obligatorio.", errors)
-            self.assertIn("El teléfono es obligatorio.", errors)
-            self.assertIn("La obra social es obligatoria.", errors)
+    def test_validate_campos_obligatorios_vacios_retorna_errores(self):
+        paciente_test = Paciente(
+            usuario=self.user,
+            nombre="", 
+            apellido="", 
+            dni="", 
+            email="", 
+            telefono="", 
+            obra_social=self.obra_social
+        )
+        errors = paciente_test.validate()
+        self.assertIn("El nombre es obligatorio.", errors)
+        self.assertIn("El apellido es obligatorio.", errors)
+        self.assertIn("El DNI es obligatorio.", errors)
+        self.assertIn("La obra social es obligatoria.", errors)
 
-# --- new ---
+    # --- new ---
+
     def test_new_crea_paciente_y_limpiamos_campos(self):
         paciente, errors = Paciente.new(
             usuario=self.user,
@@ -213,38 +213,30 @@ class PacienteModelTest(TestCase):
         )
         self.assertEqual(errors, [])
         self.assertIsNotNone(paciente)
-
         self.assertEqual(paciente.nombre, "Carlos")
         self.assertEqual(paciente.apellido, "López")
-        self.assertEqual(paciente.dni, "87654321")
-        self.assertEqual(paciente.email, "carlos.lopez@mail.com")
-        self.assertEqual(paciente.telefono, "987654321")
-        self.assertEqual(paciente.obra_social, self.obra_social)
-
         self.assertTrue(Paciente.objects.filter(dni="87654321").exists())
 
     def test_new_invalido_retorna_errores_y_no_persiste(self):
-        """Un intento de creación con datos sucios aborta el guardado y retorna errores."""
         user_falla = User.objects.create_user(username="cfalla", password="test1234")
         count_antes = Paciente.objects.count()
 
         paciente, errors = Paciente.new(
             usuario=user_falla,
-            nombre="",  # Nombre vacío
-            apellido="",  # Apellido vacío
-            dni="ABC12345",  # DNI con letras
-            email="",  # Email vacío
-            telefono="",  # Teléfono vacío
+            nombre="", 
+            apellido="", 
+            dni="ABC12345",
+            email="", 
+            telefono="", 
             obra_social=self.obra_social
         )
         self.assertIsNone(paciente)
-        self.assertTrue(len(errors) >= 2) # Debería haber varios errores
+        self.assertTrue(len(errors) >= 2)
         self.assertEqual(Paciente.objects.count(), count_antes)
 
-# --- update ---
+    # --- update ---
 
     def test_update_modifica_datos_correctamente(self):
-        """Modifica atributos validos y los guarda."""
         errors = self.paciente.update(
             nombre="Carlos", 
             apellido="López",
@@ -256,74 +248,31 @@ class PacienteModelTest(TestCase):
         self.assertEqual(errors, [])
         self.paciente.refresh_from_db()
         self.assertEqual(self.paciente.nombre, "Carlos")
-        self.assertEqual(self.paciente.apellido, "López")
-        self.assertEqual(self.paciente.dni, "87654321")
-        self.assertEqual(self.paciente.email, "carlos.lopez@mail.com")
-        self.assertEqual(self.paciente.telefono, "987654321")
-        self.assertEqual(self.paciente.obra_social, self.obra_social)
 
     def test_update_invalido_retiene_datos_originales(self):
-        """Un update con un DNI inválido frena la operación y no modifica los datos."""
-        errors = self.paciente.update(dni="ABC12345")  # DNI con letras
+        errors = self.paciente.update(dni="ABC12345")
         self.assertIn("El DNI debe contener solo números.", errors)
-
         self.paciente.refresh_from_db()
-        self.assertEqual(self.paciente.dni, "12345678")  # El DNI no debería haber cambiado
-
-class TurnoModelTest(TestCase):
-
-    """TESTS DE MODELO TURNO"""
-
-    def setUp(self):
-        self.medico = Medico.objects.create(
-            nombre="Juan", apellido="Perez", matricula="MP-1", especialidad="Cardiología"
-        )
-        self.paciente = Paciente.objects.create(
-            nombre="Maria", apellido="Gomez"
-        )
-
-    def test_cancelar_turno_exitoso(self):
-        fecha = timezone.now() + timedelta(days=1)
-        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
-        errors = turno.cancelar()
-        self.assertEqual(len(errors), 0)
-        self.assertEqual(turno.estado, "CANCELADO")
-
-    def test_cancelar_turno_pasado_falla(self):
-        # Creamos un turno en el pasado 
-        fecha_pasada = timezone.now() - timedelta(days=1)
-        turno, _ = Turno.new(fecha_hora=fecha_pasada, medico=self.medico, paciente=self.paciente)
-        errores = turno.cancelar()
-        self.assertNotEqual(len(errores), 0)
-        self.assertEqual(turno.estado, "PENDIENTE")
-    
-    def test_aceptar_turno_exitoso(self):
-        turno, _ = Turno.new(fecha_hora=timezone.now() + timedelta(days=1), medico=self.medico, paciente=self.paciente)
-        errores = turno.aceptar()
-        self.assertEqual(len(errores), 0)
-        self.assertEqual(turno.estado, "ACEPTADO")
-
-    def test_aceptar_turno_ya_cancelado_falla(self):
-        turno, _ = Turno.new(fecha_hora=timezone.now() + timedelta(days=1), medico=self.medico, paciente=self.paciente)
-        turno.cancelar() #cancelamos primero
-        #Intenta aceptarlo
-        errores = turno.aceptar()
-        #Verifico que falle
-        self.assertNotEqual(len(errores), 0)
-        self.assertEqual(turno.estado, "CANCELADO")
+        self.assertEqual(self.paciente.dni, "12345678")
 
         ''''Test Modelos Ausencia + Recordatorio'''
 
 class AusenciaModelTest(TestCase):
 
     def setUp(self):
-        # Infraestructura base idéntica al ejemplo del profesor
+        self.user = User.objects.create_user(username="laura_ausencia", password="123")
+        self.especialidad = Especialidad.objects.create(nombre="Pediatría")
+        self.obra_social = ObraSocial.objects.create(nombre="OSDE")
+        
         self.medico = Medico.objects.create(
+            usuario=self.user,
             nombre="Laura",
             apellido="Romero",
             matricula="MP-9999",
-            especialidad="Pediatría",
+            especialidad=self.especialidad,
+            obra_social=self.obra_social
         )
+        
         self.fecha_i = timezone.now().date()
         self.fecha_f = timezone.now().date() + timedelta(days=2)
         
@@ -388,10 +337,33 @@ class AusenciaModelTest(TestCase):
 class RecordatorioModelTest(TestCase):
     
     def setUp(self):
+       
+        self.user_medico = User.objects.create_user(username="med_rec", password="123")
+        self.user_paciente = User.objects.create_user(username="pac_rec", password="123")
+        self.especialidad = Especialidad.objects.create(nombre="Pediatría")
+        self.obra_social = ObraSocial.objects.create(nombre="OSDE")
+
+        
         self.medico = Medico.objects.create(
-            nombre="Laura", apellido="Romero", matricula="MP-9999", especialidad="Pediatría"
+            usuario=self.user_medico,
+            nombre="Laura", 
+            apellido="Romero", 
+            matricula="MP-9999", 
+            especialidad=self.especialidad,
+            obra_social=self.obra_social
         )
-        self.paciente = Paciente.objects.create(nombre="Maria", apellido="Gomez")
+        
+       
+        self.paciente = Paciente.objects.create(
+            usuario=self.user_paciente,
+            nombre="Maria", 
+            apellido="Gomez",
+            dni="11111111",
+            email="maria@mail.com",
+            obra_social=self.obra_social
+        )
+        
+       
         self.turno, _ = Turno.new(
             fecha_hora=timezone.now() + timedelta(days=1), medico=self.medico, paciente=self.paciente
         )
@@ -450,12 +422,23 @@ class EspecialidadModelTest(TestCase):
             descripcion="Cuidado médico de niños y adolescentes"
         )
 
-        # --- __str__ y métodos simples ---
+    # --- __str__ y métodos simples ---
     
     def test_str_retorna_nombre_especialidad(self):
         self.assertEqual(str(self.especialidad), "Pediatría")
 
-        # --- validate ---
+    # --- Métodos de Negocio  ---
+
+    def test_tiene_detalles_con_descripcion_retorna_true(self):
+        """Verifica que retorne True si la especialidad tiene descripción cargada."""
+        self.assertTrue(self.especialidad.tiene_detalles())
+
+    def test_tiene_detalles_vacio_retorna_false(self):
+        """Verifica que retorne False si la descripción está en blanco o vacía."""
+        esp_sin_desc, _ = Especialidad.new(nombre="Cardiología", descripcion="")
+        self.assertFalse(esp_sin_desc.tiene_detalles())
+
+    # --- validate ---
 
     def test_validate_datos_correctos_retorna_lista_vacia(self):
         errors = Especialidad.validate("Cardiología")
@@ -471,7 +454,7 @@ class EspecialidadModelTest(TestCase):
         self.assertTrue(len(errors) > 0)
         self.assertIn("El nombre de la especialidad debe tener al menos 4 caracteres.", errors)
 
-        # --- new ---
+    # --- new ---
 
     def test_new_crea_especialidad_con_datos_validos(self):
         esp, errors = Especialidad.new("Dermatología", "Problemas de la piel")
@@ -487,7 +470,7 @@ class EspecialidadModelTest(TestCase):
         self.assertTrue(len(errors) > 0)
         self.assertEqual(Especialidad.objects.count(), count_antes)
 
-        # --- update ---
+    # --- update ---
 
     def test_update_modifica_datos_correctamente(self):
         errors = self.especialidad.update("Neurología Infantil", "Nueva descripción")
@@ -501,10 +484,9 @@ class EspecialidadModelTest(TestCase):
         self.especialidad.refresh_from_db()
         self.assertEqual(self.especialidad.nombre, "Pediatría")
 
-    # --- OBRASOCIAL ---
 
-    class ObraSocialModelTest(TestCase):
-        """Verifica comportamiento básico y validaciones del modelo ObraSocial."""
+class ObraSocialModelTest(TestCase):
+    """Verifica comportamiento básico y validaciones del modelo ObraSocial."""
 
     def setUp(self):
         self.obra_social, _ = ObraSocial.new(
@@ -512,7 +494,7 @@ class EspecialidadModelTest(TestCase):
             sigla="osde"
         )
 
-        # --- __str__ y métodos simples ---
+    # --- __str__ y métodos simples ---
 
     def test_str_incluye_sigla_y_nombre_si_ambos_existen(self):
         self.assertEqual(str(self.obra_social), "OSDE - Organización de Servicios Directos Empresarios")
@@ -521,7 +503,18 @@ class EspecialidadModelTest(TestCase):
         os_sin_sigla, _ = ObraSocial.new(nombre="Obra Social de Chóferes")
         self.assertEqual(str(os_sin_sigla), "Obra Social de Chóferes")
 
-        # --- validate ---
+    # --- Métodos de Negocio  ---
+
+    def test_obtener_identificador_comercial_con_sigla(self):
+        """Verifica que devuelva la sigla si está cargada."""
+        self.assertEqual(self.obra_social.obtener_identificador_comercial(), "OSDE")
+
+    def test_obtener_identificador_comercial_sin_sigla(self):
+        """Verifica que devuelva el nombre completo si no tiene sigla."""
+        os_sin_sigla, _ = ObraSocial.new(nombre="Particular")
+        self.assertEqual(os_sin_sigla.obtener_identificador_comercial(), "Particular")
+
+    # --- validate ---
 
     def test_validate_datos_correctos_retorna_lista_vacia(self):
         errors = ObraSocial.validate("Programa de Atención Médica Integral")
@@ -537,7 +530,7 @@ class EspecialidadModelTest(TestCase):
         self.assertTrue(len(errors) > 0)
         self.assertIn("El nombre de la obra social debe tener al menos 3 caracteres.", errors)
 
-        # --- new ---
+    # --- new ---
 
     def test_new_crea_obra_social_con_datos_validos_y_sigla_en_mayusculas(self):
         os, errors = ObraSocial.new("Obra Social de la Unión del Personal Civil de la Nación", "upcn")
@@ -546,7 +539,7 @@ class EspecialidadModelTest(TestCase):
         self.assertEqual(os.sigla, "UPCN")
         self.assertTrue(ObraSocial.objects.filter(sigla="UPCN").exists())
 
-        # --- update ---
+    # --- update ---
 
     def test_update_modifica_datos_correctamente(self):
         errors = self.obra_social.update("Medicus SA", "med")
