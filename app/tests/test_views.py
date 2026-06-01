@@ -125,7 +125,7 @@ class TurnoCreateViewTest(TestCase):
     def test_validacion_turno_duplicado_falla(self):
         self.client.login(username='testuser', password='password')
         fecha = (timezone.now() + timedelta(days=2)).replace(second=0, microsecond=0)
-        #creamos un turno ya existente
+# creamos un turno ya existente
         Turno.objects.create(medico=self.medico, paciente=self.paciente, fecha_hora=fecha, estado="ACEPTADO")
         
         url = reverse('app:crear_turno')
@@ -137,7 +137,6 @@ class TurnoCreateViewTest(TestCase):
         }
         response = self.client.post(url, data)
 
-        # Si la validación falla, el status code es 200 (re-renderiza el form con errores).
         self.assertEqual(response.status_code, 200)
         self.assertFormError(
             response.context['form'],
