@@ -236,6 +236,7 @@ class Turno(models.Model):
     estado = models.CharField(max_length=20, default="PENDIENTE")
     medico = models.ForeignKey(Medico, on_delete=models.CASCADE, related_name="turnos")
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="turnos")
+    creado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="turnos_creados")
     objects = models.Manager()
     analitica = ClinicaManager()
 
@@ -271,6 +272,10 @@ class Turno(models.Model):
         return []
     
     """METODOS PARA CANCELAR/ACEPTAR TURNOS"""
+
+    def esta_pendiente(self) -> bool:
+        return self.estado == "PENDIENTE"
+
     def cancelar(self) -> list[str]:
         """Cancela el turno actual."""
         #Regla de negocio: No cancelar si el turno ya pasó
