@@ -4,6 +4,7 @@ from __future__ import annotations
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 class Medico(models.Model):
     """Representa a un profesional médico."""
@@ -247,12 +248,37 @@ class Turno(models.Model):
     def __str__(self) -> str:
         return f"Turno: {self.fecha_hora} - Paciente: {self.paciente.apellido}"
     
+    def clean(self):
+        """Validación oficial para formularios de Django."""
+        super().clean()
+        if self.fecha_hora and self.medico:
+            duplicado = Turno.objects.filter(
+                medico=self.medico,
+                fecha_hora=self.fecha_hora,
+                estado="ACEPTADO"
+            ).exclude(id=self.id).exists()
+            
+            if duplicado:
+                raise ValidationError(f"El Dr./a {self.medico.apellido} ya tiene un turno aceptado en este horario.")
+
     def validate(self) -> list[str]:
+        """Validación interna de nuestro framework de capas."""
         errors = []
         if not self.fecha_hora or not self.medico or not self.paciente:
             errors.append("Datos incompletos.")
         if self.fecha_hora and self.fecha_hora < timezone.now():
             errors.append("No se pueden solicitar turnos en fechas pasadas.")
+        
+        # También lo dejamos acá para los tests de modelos independientes
+        if self.fecha_hora and self.medico:
+            duplicado = Turno.objects.filter(
+                medico=self.medico,
+                fecha_hora=self.fecha_hora,
+                estado="ACEPTADO"
+            ).exclude(id=self.id).exists()
+            if duplicado:
+                errors.append(f"El Dr./a {self.medico.apellido} ya tiene un turno aceptado en este horario.")
+                
         return errors
     
     @classmethod
