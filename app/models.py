@@ -12,8 +12,8 @@ class Medico(models.Model):
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     matricula = models.CharField(max_length=20, unique=True)
-    especialidad = models.ForeignKey(Especialidad, on_delete=models.PROTECT, related_name="medicos")
-    obra_social = models.ForeignKey(ObraSocial, on_delete=models.PROTECT, related_name="medicos")
+    especialidad = models.ForeignKey('Especialidad', on_delete=models.PROTECT, related_name="medicos")
+    obra_social = models.ForeignKey('ObraSocial', on_delete=models.PROTECT, related_name="medicos")
 
     class Meta:
         ordering = ["apellido", "nombre"]
@@ -68,7 +68,7 @@ class Medico(models.Model):
         return []
 
     
-    class Paciente(models.Model):
+class Paciente(models.Model):
         """Representa a un paciente."""
 
         usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name="paciente")
@@ -77,7 +77,7 @@ class Medico(models.Model):
         dni = models.CharField(max_length=20, unique=True)
         email = models.EmailField()
         telefono = models.CharField(max_length=20, blank=True, default="")
-        obra_social = models.ForeignKey(ObraSocial, on_delete=models.PROTECT, related_name="pacientes")
+        obra_social = models.ForeignKey('ObraSocial', on_delete=models.PROTECT, related_name="pacientes")
 
         class Meta:
             ordering = ["apellido", "nombre"]
