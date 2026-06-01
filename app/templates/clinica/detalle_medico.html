@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Dr/a. {{ medico }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>{{ medico }}</h2>
+  <ul class="list-group mt-3">
+    <li class="list-group-item"><strong>Matrícula:</strong> {{ medico.matricula }}</li>
+    <li class="list-group-item"><strong>Especialidad:</strong> {{ medico.especialidad }}</li>
+    <li class="list-group-item"><strong>Obra Social:</strong> {{ medico.obra_social }}</li>
+    <li class="list-group-item"><strong>Turnos totales:</strong> {{ medico.cantidad_turnos }}</li>
+  </ul>
+  <a href="{% url 'app:lista_medicos' %}" class="btn btn-secondary mt-3">Volver</a>
+</div>
+{% endblock %}

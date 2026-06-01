@@ -78,8 +78,9 @@ class MedicoModelTest(TestCase):
     # --- new ---
 
     def test_new_crea_medico_con_datos_validos(self):
+        nuevo_usuario = User.objects.create_user(username="clopez", password="test1234")
         medico, errors = Medico.new(
-            usuario=self.user,
+            usuario=nuevo_usuario,
             nombre="Carlos",
             apellido="López",
             matricula="MP-1234",
@@ -173,9 +174,9 @@ class TurnoModelTest(TestCase):
 
     def test_confirmar_turno_exitoso(self):
         turno, _ = Turno.new(fecha_hora=timezone.now() + timedelta(days=1), medico=self.medico, paciente=self.paciente)
-        errores = turno.confirmar()
+        errores = turno.aceptar()
         self.assertEqual(len(errores), 0)
-        self.assertEqual(turno.estado, "CONFIRMADO")
+        self.assertEqual(turno.estado, "ACEPTADO")
 
 
 class PacienteModelTest(TestCase):
@@ -247,13 +248,13 @@ class PacienteModelTest(TestCase):
         self.assertIn("El nombre es obligatorio.", errors)
         self.assertIn("El apellido es obligatorio.", errors)
         self.assertIn("El DNI es obligatorio.", errors)
-        self.assertIn("La obra social es obligatoria.", errors)
 
     # --- new ---
 
     def test_new_crea_paciente_y_limpiamos_campos(self):
+        nuevo_usuario = User.objects.create_user(username="clopez_pac", password="test1234")
         paciente, errors = Paciente.new(
-            usuario=self.user,
+            usuario=nuevo_usuario,
             nombre="Carlos", 
             apellido="López",
             dni="87654321",

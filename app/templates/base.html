@@ -18,7 +18,14 @@
           <li class="nav-item">
             <a class="nav-link" href="{% url 'app:lista_medicos' %}">Médicos</a>
           </li>
-          <!-- TODO: agregar links a turnos y pacientes -->
+          {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'app:lista_pacientes' %}">Pacientes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'app:lista_turnos' %}">Turnos</a>
+          </li>
+          {% endif %}
         </ul>
         <ul class="navbar-nav ms-auto align-items-center">
           {% if user.is_authenticated %}
@@ -26,11 +33,15 @@
               Hola, <strong>{{ user.username }}</strong>
             </li>
             <li class="nav-item">
-              <a class="btn btn-outline-light btn-sm" href="{% url 'app:logout' %}">Salir</a>
+              {# Django 5.x requiere POST para logout por seguridad CSRF #}
+              <form method="post" action="{% url 'logout' %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-light btn-sm">Salir</button>
+              </form>
             </li>
           {% else %}
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'app:login' %}">log in</a>
+              <a class="nav-link" href="{% url 'login' %}">Ingresar</a>
             </li>
             <li class="nav-item">
               <a class="btn btn-light btn-sm text-success fw-bold ms-2" href="{% url 'app:registro' %}">Sign in</a>
