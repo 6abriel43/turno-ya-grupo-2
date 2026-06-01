@@ -87,6 +87,8 @@ class TurnoCreateViewTest(TestCase):
     def setUp(self):
         #creamos datos necesarios para los tests
         self.user = User.objects.create_user(username='testuser', password='password')
+        self.esp = Especialidad.objects.create(nombre="Pediatría")
+        self.os = ObraSocial.objects.create(nombre="OSDE")
         self.medico = Medico.objects.create(nombre="Laura", apellido="Romero", matricula="MP-9999", especialidad="Pediatría")
         self.paciente = Paciente.objects.create(nombre="Ana", apellido="Perez")
         self.client = Client()
@@ -97,7 +99,7 @@ class TurnoCreateViewTest(TestCase):
         data = {
             'medico': self.medico.id,
             'paciente': self.paciente.id,
-            'fecha_hora': timezone.now() + timedelta(days=2),
+            'fecha_hora': (timezone.now() + timedelta(days=2)).isoformat(),
             'motivo': 'Consulta general'
         }
         response = self.client.post(url, data)
@@ -114,9 +116,8 @@ class TurnoCreateViewTest(TestCase):
         data = {
             'medico': self.medico.id,
             'paciente': self.paciente.id,
-            'fecha_hora': fecha,
+            'fecha_hora': fecha.strftime('%Y-%m-%dT%H:%M'),
             'motivo': 'Otro motivo'
         }
         response = self.client.post(url, data)
-        #El form debe dar inválido
-        self.assertFormError(response, 'form', None, "El Dr./a Romero ya tiene un turno aceptado en este horario.")
+        self.assertFormError(response, 'form', None, f"El Dr./a {self.medico.apellido} ya tiene un turno confirmado en este horario.")

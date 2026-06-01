@@ -126,7 +126,57 @@ class MedicoModelTest(TestCase):
         self.medico.refresh_from_db()
         self.assertEqual(self.medico.nombre, "Laura")  # El nombre no debería haber cambiado
 
-    
+class TurnoModelTest(TestCase):
+    """TESTS DE MODELO TURNO"""
+    def setUp(self):
+        # Creamos las dependencias completas para que no tire IntegrityError
+        self.user_med = User.objects.create_user(username="med_turno", password="123")
+        self.user_pac = User.objects.create_user(username="pac_turno", password="123")
+        self.especialidad = Especialidad.objects.create(nombre="Cardiología")
+        self.obra_social = ObraSocial.objects.create(nombre="OSDE")
+
+        self.medico = Medico.objects.create(usuario=self.user_med, nombre="Juan", apellido="Perez", matricula="MP-1", especialidad=self.especialidad, obra_social=self.obra_social)
+        self.paciente = Paciente.objects.create(usuario=self.user_pac, nombre="Maria", apellido="Gomez", dni="111", email="a@a.com", obra_social=self.obra_social)
+
+    # --- Tests validate, new y update ---
+    def test_validate_datos_incompletos_retorna_error(self):
+        turno_malo = Turno(motivo="Falta medico y paciente")
+        errors = turno_malo.validate()
+        self.assertIn("Datos incompletos.", errors)
+
+    def test_new_crea_turno_valido(self):
+        fecha = timezone.now() + timedelta(days=2)
+        turno, errors = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
+        self.assertEqual(errors, [])
+        self.assertEqual(turno.estado, "PENDIENTE")
+
+    def test_update_modifica_datos_correctamente(self):
+        fecha = timezone.now() + timedelta(days=2)
+        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente, motivo="Viejo motivo")
+        errors = turno.update(motivo="Nuevo motivo")
+        self.assertEqual(errors, [])
+        turno.refresh_from_db()
+        self.assertEqual(turno.motivo, "Nuevo motivo")
+
+    # --- Tests Métodos de Negocio ---
+    def test_esta_pendiente(self):
+        fecha = timezone.now() + timedelta(days=2)
+        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
+        self.assertTrue(turno.esta_pendiente())
+
+    def test_cancelar_turno_exitoso(self):
+        fecha = timezone.now() + timedelta(days=1)
+        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
+        errors = turno.cancelar()
+        self.assertEqual(len(errors), 0)
+        self.assertEqual(turno.estado, "CANCELADO")
+
+    def test_confirmar_turno_exitoso(self):
+        turno, _ = Turno.new(fecha_hora=timezone.now() + timedelta(days=1), medico=self.medico, paciente=self.paciente)
+        errores = turno.confirmar()
+        self.assertEqual(len(errores), 0)
+        self.assertEqual(turno.estado, "CONFIRMADO")
+
 
 class PacienteModelTest(TestCase):
     """TESTS DE MODELO PACIENTE"""
@@ -337,7 +387,6 @@ class AusenciaModelTest(TestCase):
 class RecordatorioModelTest(TestCase):
     
     def setUp(self):
-       
         self.user_medico = User.objects.create_user(username="med_rec", password="123")
         self.user_paciente = User.objects.create_user(username="pac_rec", password="123")
         self.especialidad = Especialidad.objects.create(nombre="Pediatría")
@@ -353,7 +402,7 @@ class RecordatorioModelTest(TestCase):
             obra_social=self.obra_social
         )
         
-       
+    
         self.paciente = Paciente.objects.create(
             usuario=self.user_paciente,
             nombre="Maria", 
@@ -363,7 +412,6 @@ class RecordatorioModelTest(TestCase):
             obra_social=self.obra_social
         )
         
-       
         self.turno, _ = Turno.new(
             fecha_hora=timezone.now() + timedelta(days=1), medico=self.medico, paciente=self.paciente
         )
