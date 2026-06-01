@@ -107,7 +107,7 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
     
 
 '''VISTAS AUSENCIA + RECORDATORIO'''
-class AusenciaListView(ListView):
+class AusenciaListView(LoginRequiredMixin, ListView):
     """Vista para listar el historial de ausencias del personal médico."""
     from .models import Ausencia
     model = Ausencia
@@ -115,7 +115,7 @@ class AusenciaListView(ListView):
     context_object_name = "lista_ausencias"
     ordering = ['-fecha_inicio']
 
-class RecordatorioListView(ListView):
+class RecordatorioListView(LoginRequiredMixin, ListView):
     """Vista para el panel de control y seguimiento de recordatorios."""
     from .models import Recordatorio
     model = Recordatorio

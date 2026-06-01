@@ -484,7 +484,7 @@ class Recordatorio(models.Model):
         if usuarios_lista is not None: self.usuarios.set(usuarios_lista)
         return []
 
-def marcar_como_leido(self) -> list[str]:
+    def marcar_como_leido(self) -> list[str]:
         """Método de negocio requerido por la entrega intermedia."""
         self.leido = True
         self.save()
