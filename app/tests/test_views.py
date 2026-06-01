@@ -114,9 +114,8 @@ class TurnoCreateViewTest(TestCase):
         data = {
             'medico': self.medico.id,
             'paciente': self.paciente.id,
-            'fecha_hora': fecha,
+            'fecha_hora': fecha.strftime('%Y-%m-%dT%H:%M'),
             'motivo': 'Otro motivo'
         }
         response = self.client.post(url, data)
-        #El form debe dar inválido
-        self.assertFormError(response, 'form', None, "El Dr./a Romero ya tiene un turno aceptado en este horario.")
+        self.assertFormError(response, 'form', None, f"El Dr./a {self.medico.apellido} ya tiene un turno confirmado en este horario.")
