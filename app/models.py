@@ -221,7 +221,7 @@ class EstadisticasClinicaQuerySet(models.QuerySet):
 
 class ClinicaManager(models.Manager):
     def get_queryset(self):
-        return EstadisticasClinicaQuerySet(self.model, def_using=self._db)
+        return EstadisticasClinicaQuerySet(self.model, using=self._db)
 
     def obtener_panel_home(self) -> dict:
         return self.get_queryset().metricas_del_dia()

@@ -46,7 +46,7 @@ class VistasTestCase(TestCase):
         response = self.client.get(self.url_medicos)
         
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "app/lista_medicos.html")
+        self.assertTemplateUsed(response, "clinica/lista_medicos.html")
         self.assertIn('medicos', response.context) # Verifica que inyectamos la lista
         self.assertIn('especialidades', response.context) # Verifica que mandamos las opciones del filtro
 
@@ -69,7 +69,7 @@ class VistasTestCase(TestCase):
         response = self.client.get(self.url_pacientes)
         
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "app/lista_pacientes.html")
+        self.assertTemplateUsed(response, "clinica/lista_pacientes.html")
 
     def test_lista_pacientes_buscador_por_dni(self):
         """Verifica que este filtrando correctamente."""
@@ -87,10 +87,26 @@ class TurnoCreateViewTest(TestCase):
     def setUp(self):
         #creamos datos necesarios para los tests
         self.user = User.objects.create_user(username='testuser', password='password')
+        self.user_med = User.objects.create_user(username='meduser', password='password')
+        self.user_pac = User.objects.create_user(username='pacuser', password='password')
         self.esp = Especialidad.objects.create(nombre="Pediatría")
         self.os = ObraSocial.objects.create(nombre="OSDE")
-        self.medico = Medico.objects.create(nombre="Laura", apellido="Romero", matricula="MP-9999", especialidad="Pediatría")
-        self.paciente = Paciente.objects.create(nombre="Ana", apellido="Perez")
+        self.medico = Medico.objects.create(
+            usuario=self.user_med,
+            nombre="Laura",
+            apellido="Romero",
+            matricula="MP-9999",
+            especialidad=self.esp,
+            obra_social=self.os,
+        )
+        self.paciente = Paciente.objects.create(
+            usuario=self.user_pac,
+            nombre="Ana",
+            apellido="Perez",
+            dni="11111111",
+            email="ana@test.com",
+            obra_social=self.os,
+        )
         self.client = Client()
 
     def test_creacion_turno_valido(self):
@@ -108,7 +124,7 @@ class TurnoCreateViewTest(TestCase):
 
     def test_validacion_turno_duplicado_falla(self):
         self.client.login(username='testuser', password='password')
-        fecha = timezone.now() + timedelta(days=2)
+        fecha = timezone.now() + timedelta(days=2).replace(second=0, microsecond=0)
         #creamos un turno ya existente
         Turno.objects.create(medico=self.medico, paciente=self.paciente, fecha_hora=fecha, estado="ACEPTADO")
         
@@ -120,4 +136,11 @@ class TurnoCreateViewTest(TestCase):
             'motivo': 'Otro motivo'
         }
         response = self.client.post(url, data)
-        self.assertFormError(response, 'form', None, f"El Dr./a {self.medico.apellido} ya tiene un turno confirmado en este horario.")
+
+        # Si la validación falla, el status code es 200 (re-renderiza el form con errores).
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(
+            response.context['form'],
+            None,
+            f"El Dr./a {self.medico.apellido} ya tiene un turno aceptado en este horario."
+        )

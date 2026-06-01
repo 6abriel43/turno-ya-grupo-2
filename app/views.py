@@ -1,8 +1,9 @@
 """Vistas iniciales para navegar médicos y pantalla de inicio."""
 
-from django.views.generic import ListView, TemplateView, CreateView, View
+from django.views.generic import ListView, TemplateView, CreateView, View, DetailView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404, redirect
 from .models import Medico, Turno, Paciente
 from .forms import TurnoForm #formulario hecho en forms.py
 from django.utils import timezone
@@ -67,7 +68,7 @@ class ListaMedicosView(LoginRequiredMixin, ListView):
 # class CancelarTurnoView(...): ...
 # class ListaPacientesView(...): ...
 
-class DetalleMedicoView(LoginRequiredMixin, TemplateView):
+class DetalleMedicoView(LoginRequiredMixin, DetailView):
     """Muestra el detalle de un médico específico."""
 
     model = Medico
@@ -114,6 +115,15 @@ class ListaTurnosView(LoginRequiredMixin, ListView):
         # Ordenamos los turnos mostrando los más recientes primero
         return Turno.objects.all().order_by('-fecha_hora')   
 
+class CancelarTurnoView(LoginRequiredMixin, View):
+    """Cancela un turno dado su pk mediante POST."""
+
+    def post(self, request, pk):
+        turno = get_object_or_404(Turno, pk=pk)
+        turno.cancelar()
+        return redirect('app:lista_turnos')
+
+
 '''VISTAS AUSENCIA + RECORDATORIO'''
 class AusenciaListView(LoginRequiredMixin, ListView):
     """Vista para listar el historial de ausencias del personal médico."""
@@ -134,7 +144,7 @@ class RecordatorioListView(LoginRequiredMixin, ListView):
 class RegistroUsuarioView(CreateView):
     """Vista basada en clase para el alta de nuevos usuarios en el sistema."""
     form_class = UserCreationForm
-    template_name = 'registration/registro.html'
+    template_name = 'registro/registro.html'
     success_url = reverse_lazy('app:home')
 
     def form_valid(self, form):
