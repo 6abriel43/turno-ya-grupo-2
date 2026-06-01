@@ -98,13 +98,21 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
     model = Turno
     form_class = TurnoForm
     template_name = 'clinica/turno_form.html'
-    success_url = reverse_lazy('lista_turnos') # Cambia 'lista_turnos' por el nombre de URL de listado
+    success_url = reverse_lazy('app:lista_turnos') 
 
     def form_valid(self, form):
-        # Opcional: imprimir en consola para debug como pide la guía avanzada
-        print(f"Se está creando un turno para el médico: {form.cleaned_data['medico']}")
+        #asignamos automaticamente quien creo el turno
+        form.instance.creado_por = self.request.user
         return super().form_valid(form)
-    
+
+class ListaTurnosView(LoginRequiredMixin, ListView):
+    model = Turno
+    template_name = "clinica/lista_turnos.html"
+    context_object_name = "turnos"
+
+    def get_queryset(self):
+        # Ordenamos los turnos mostrando los más recientes primero
+        return Turno.objects.all().order_by('-fecha_hora')   
 
 '''VISTAS AUSENCIA + RECORDATORIO'''
 class AusenciaListView(LoginRequiredMixin, ListView):
