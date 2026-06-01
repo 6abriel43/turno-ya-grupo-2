@@ -125,6 +125,7 @@ class TurnoCreateViewTest(TestCase):
     def test_validacion_turno_duplicado_falla(self):
         self.client.login(username='testuser', password='password')
         fecha = (timezone.now() + timedelta(days=2)).replace(second=0, microsecond=0)
+# creamos un turno ya existente
         Turno.objects.create(medico=self.medico, paciente=self.paciente, fecha_hora=fecha, estado="ACEPTADO")
         
         url = reverse('app:crear_turno')
