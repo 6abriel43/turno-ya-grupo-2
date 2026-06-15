@@ -52,6 +52,13 @@ class HistorialPacienteTest(TestCase):
             motivo="Control",
             estado="CONFIRMADO",
         )
+        self.turno_aceptado = Turno.objects.create(
+            fecha_hora=timezone.now() - timedelta(days=4),
+            medico=self.medico,
+            paciente=self.paciente,
+            motivo="Consulta aceptada",
+            estado="ACEPTADO",
+        )
         self.turno_finalizado = Turno.objects.create(
             fecha_hora=timezone.now() - timedelta(days=2),
             medico=self.medico,
@@ -66,6 +73,20 @@ class HistorialPacienteTest(TestCase):
             motivo="Pendiente",
             estado="PENDIENTE",
         )
+        self.turno_otro_medico = Turno.objects.create(
+            fecha_hora=timezone.now() - timedelta(days=1),
+            medico=self.otro_medico,
+            paciente=self.paciente,
+            motivo="Consulta con otro medico",
+            estado="FINALIZADO",
+        )
+
+    def test_usuario_no_logueado_no_puede_ver_historial(self):
+        url = reverse("app:historial_paciente", kwargs={"paciente_id": self.paciente.id})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 302)
 
     def test_medico_puede_ver_historial_de_paciente(self):
         self.client.login(username="medico_historial", password="123")
@@ -85,16 +106,26 @@ class HistorialPacienteTest(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
-    def test_historial_muestra_solo_confirmados_o_finalizados(self):
+    def test_historial_muestra_estados_validos(self):
         self.client.login(username="medico_historial", password="123")
         url = reverse("app:historial_paciente", kwargs={"paciente_id": self.paciente.id})
 
         response = self.client.get(url)
         turnos = list(response.context["turnos"])
 
+        self.assertIn(self.turno_aceptado, turnos)
         self.assertIn(self.turno_confirmado, turnos)
         self.assertIn(self.turno_finalizado, turnos)
         self.assertNotIn(self.turno_pendiente, turnos)
+
+    def test_historial_no_muestra_turnos_de_otro_medico(self):
+        self.client.login(username="medico_historial", password="123")
+        url = reverse("app:historial_paciente", kwargs={"paciente_id": self.paciente.id})
+
+        response = self.client.get(url)
+        turnos = list(response.context["turnos"])
+
+        self.assertNotIn(self.turno_otro_medico, turnos)
 
     def test_medico_puede_guardar_observacion(self):
         self.client.login(username="medico_historial", password="123")

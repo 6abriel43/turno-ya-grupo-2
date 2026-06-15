@@ -3,6 +3,7 @@
 from django.views.generic import ListView, TemplateView, CreateView, View, DetailView, UpdateView
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
 from .models import Medico, Turno, Paciente
 from .forms import TurnoForm #formulario hecho en forms.py
@@ -12,11 +13,14 @@ from django.db.models import Q
 
 
 class MedicoRequiredMixin(UserPassesTestMixin):
-    raise_exception = True
-
     def test_func(self):
         # solo los usuarios medicos pueden entrar
         return hasattr(self.request.user, "medico")
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied
+        return super().handle_no_permission()
 
 class HomeView(TemplateView):
     """Vista de inicio de la clínica potenciada con las estadísticas de tu Manager."""
@@ -112,7 +116,8 @@ class HistorialPacienteListView(LoginRequiredMixin, MedicoRequiredMixin, ListVie
         paciente_id = self.kwargs["paciente_id"]
         return Turno.objects.select_related("paciente", "medico").filter(
             paciente_id=paciente_id,
-            estado__in=["CONFIRMADO", "FINALIZADO"],
+            medico=self.request.user.medico,
+            estado__in=["ACEPTADO", "CONFIRMADO", "FINALIZADO"],
         ).order_by("-fecha_hora")
 
     def get_context_data(self, **kwargs):
