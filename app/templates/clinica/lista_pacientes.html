@@ -6,10 +6,10 @@
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
   <div>
     <h2 class="h4 mb-1">Pacientes</h2>
-    <p class="text-muted mb-0">Listado de pacientes registrados en la clínica.</p>
+    <p class="text-muted mb-0">Listado de pacientes registrados en la clinica.</p>
   </div>
   <div>
-    <a href="#" class="btn btn-primary">Nuevo Paciente </a>
+    <a href="#" class="btn btn-primary">Nuevo Paciente</a>
   </div>
 </div>
 
@@ -34,7 +34,8 @@
         <th>Apellido</th>
         <th>Nombre</th>
         <th>Obra social</th>
-        <th>Teléfono</th>
+        <th>Telefono</th>
+        <th>Historial</th>
       </tr>
     </thead>
     <tbody>
@@ -45,10 +46,13 @@
         <td>{{ paciente.nombre }}</td>
         <td>{{ paciente.obra_social.nombre|default:"-" }}</td>
         <td>{{ paciente.telefono|default:"-" }}</td>
+        <td>
+          <a href="{% url 'app:historial_paciente' paciente.id %}" class="btn btn-sm btn-outline-success">Ver historial</a>
+        </td>
       </tr>
       {% empty %}
       <tr>
-        <td colspan="5" class="text-center text-muted py-4">No se encontraron pacientes con esos datos.</td>
+        <td colspan="6" class="text-center text-muted py-4">No se encontraron pacientes con esos datos.</td>
       </tr>
       {% endfor %}
     </tbody>
