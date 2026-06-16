@@ -3,48 +3,63 @@
 {% block title %}Historial del paciente - TurnoYa{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
-  <div>
-    <h1 class="h4 mb-1">Historial del paciente</h1>
-    <p class="text-muted mb-0">
-      {{ paciente.apellido }}, {{ paciente.nombre }} - DNI {{ paciente.dni }}
-    </p>
+<section class="page-header">
+  <div class="page-heading">
+    <span class="page-icon">{% include "includes/iconos.html" with icono="historial" %}</span>
+    <div>
+      <h1 class="page-title">Historial del paciente</h1>
+      <p class="page-subtitle">
+        {{ paciente.apellido }}, {{ paciente.nombre }} - DNI {{ paciente.dni }}
+      </p>
+    </div>
   </div>
-  <a href="{% url 'app:lista_pacientes' %}" class="btn btn-outline-secondary">Volver</a>
-</div>
+  <a href="{% url 'app:lista_pacientes' %}" class="btn btn-outline-app px-4">
+    {% include "includes/iconos.html" with icono="volver" %}
+    <span>Volver</span>
+  </a>
+</section>
 
-<div class="table-responsive">
-  <table class="table table-hover align-middle">
-    <thead class="table-light">
-      <tr>
-        <th>Fecha</th>
-        <th>Motivo</th>
-        <th>Estado</th>
-        <th>Medico</th>
-        <th>Observaciones</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for turno in turnos %}
-      <tr>
-        <td>{{ turno.fecha_hora|date:"d/m/Y H:i" }}</td>
-        <td>{{ turno.motivo|default:"-" }}</td>
-        <td>{{ turno.estado }}</td>
-        <td>{{ turno.medico }}</td>
-        <td>{{ turno.observaciones|default:"Sin observaciones" }}</td>
-        <td>
-          <a href="{% url 'app:editar_observacion' turno.pk %}" class="btn btn-sm btn-success">
-            Editar observacion
-          </a>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="6" class="text-center text-muted py-4">No hay historial para mostrar.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+<section class="table-card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle app-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Motivo</th>
+          <th>Estado</th>
+          <th>Medico</th>
+          <th>Observaciones</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for turno in turnos %}
+          <tr>
+            <td>{{ turno.fecha_hora|date:"d/m/Y H:i" }}</td>
+            <td>{{ turno.motivo|default:"-" }}</td>
+            <td><span class="badge badge-soft text-bg-success">{{ turno.estado|title }}</span></td>
+            <td>{{ turno.medico }}</td>
+            <td>{{ turno.observaciones|default:"Sin observaciones" }}</td>
+            <td>
+              <a href="{% url 'app:editar_observacion' turno.pk %}" class="btn btn-sm btn-outline-app">
+                {% include "includes/iconos.html" with icono="observacion" %}
+                Editar observacion
+              </a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <div class="empty-icon">{% include "includes/iconos.html" with icono="historial" %}</div>
+                <p class="empty-title mb-1">No hay historial para mostrar.</p>
+                <p class="mb-0">Cuando el paciente tenga atenciones, apareceran aqui.</p>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
 {% endblock %}

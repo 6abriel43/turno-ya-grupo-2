@@ -3,69 +3,84 @@
 {% block title %}Inicio - TurnoYa{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-  <div class="col">
-    <h1 class="h3 fw-bold text-primary">Panel de inicio</h1>
-    <p class="text-muted">Resumen general de la clínica para hoy: <strong>{{ fecha_hoy|date:"d/m/Y" }}</strong></p>
-  </div>
-</div>
-
-<div class="row g-3 mb-4">
-  <div class="col-12 col-sm-6 col-lg-3">
-    <div class="card h-100 border-0 shadow-sm bg-light">
-      <div class="card-body">
-        <p class="text-muted mb-1 fw-bold small text-uppercase">Turnos Hoy</p>
-        <p class="h2 mb-0 fw-bold text-dark">{{ metrics.total_turnos_hoy|default:0 }}</p>
-      </div>
+<section class="page-header">
+  <div class="page-heading">
+    <span class="page-icon">{% include "includes/iconos.html" with icono="home" %}</span>
+    <div>
+      <h1 class="page-title">Panel de inicio</h1>
+      <p class="page-subtitle">
+        Resumen general de la clinica para hoy:
+        <strong class="text-success">{{ fecha_hoy|date:"d/m/Y" }}</strong>
+      </p>
     </div>
   </div>
+</section>
 
-  <div class="col-12 col-sm-6 col-lg-3">
-    <div class="card h-100 border-0 shadow-sm bg-success bg-opacity-10">
-      <div class="card-body">
-        <p class="text-success mb-1 fw-bold small text-uppercase">Aceptados</p>
-        <p class="h2 mb-0 fw-bold text-success">{{ metrics.turnos_aceptados|default:0 }}</p>
-      </div>
+<section class="row g-4 mb-4">
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="stat-card stat-card-blue">
+      <p class="stat-label">Turnos hoy</p>
+      <p class="stat-value stat-blue">{{ metrics.total_turnos_hoy|default:0 }}</p>
     </div>
   </div>
 
-  <div class="col-12 col-sm-6 col-lg-3">
-    <div class="card h-100 border-0 shadow-sm bg-warning bg-opacity-10">
-      <div class="card-body">
-        <p class="text-warning mb-1 fw-bold small text-uppercase">Pendientes</p>
-        <p class="h2 mb-0 fw-bold text-warning">{{ metrics.turnos_pendientes|default:0 }}</p>
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="stat-card stat-card-green">
+      <p class="stat-label">Aceptados</p>
+      <p class="stat-value stat-green">{{ metrics.turnos_aceptados|default:0 }}</p>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="stat-card stat-card-yellow">
+      <p class="stat-label">Pendientes</p>
+      <p class="stat-value stat-yellow">{{ metrics.turnos_pendientes|default:0 }}</p>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="stat-card stat-card-red">
+      <p class="stat-label">Medicos ausentes</p>
+      <p class="stat-value stat-red">{{ metrics.total_ausencias_activas|default:0 }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="row g-4">
+  <div class="col-12 col-lg-6">
+    <div class="app-card h-100">
+      <div class="row align-items-center g-4">
+        <div class="col-auto">
+          <span class="page-icon">{% include "includes/iconos.html" with icono="ausencias" %}</span>
+        </div>
+        <div class="col">
+          <h2 class="h4 fw-bold mb-2">Registro de Ausencias</h2>
+          <p class="page-subtitle mb-4">Historial de licencias y carpetas medicas del personal.</p>
+          <a href="{% url 'app:lista_ausencias' %}" class="btn btn-success-app">
+            {% include "includes/iconos.html" with icono="ausencias" %}
+            <span>Ver Ausencias</span>
+          </a>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="col-12 col-sm-6 col-lg-3">
-    <div class="card h-100 border-0 shadow-sm bg-danger bg-opacity-10">
-      <div class="card-body">
-        <p class="text-danger mb-1 fw-bold small text-uppercase">Médicos Ausentes</p>
-        <p class="h2 mb-0 fw-bold text-danger">{{ metrics.total_ausencias_activas|default:0 }}</p>
+  <div class="col-12 col-lg-6">
+    <div class="app-card h-100">
+      <div class="row align-items-center g-4">
+        <div class="col-auto">
+          <span class="page-icon">{% include "includes/iconos.html" with icono="recordatorios" %}</span>
+        </div>
+        <div class="col">
+          <h2 class="h4 fw-bold mb-2">Panel de Recordatorios</h2>
+          <p class="page-subtitle mb-4">Seguimiento de las notificaciones de turnos enviadas.</p>
+          <a href="{% url 'app:lista_recordatorios' %}" class="btn btn-primary-app">
+            {% include "includes/iconos.html" with icono="recordatorios" %}
+            <span>Ver Notificaciones</span>
+          </a>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
-<div class="row g-3">
-  <div class="col-12 col-md-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title fw-bold">📋 Registro de Ausencias</h5>
-        <p class="card-text text-muted small">Historial de licencias y carpetas médicas del personal.</p>
-        <a href="{% url 'app:lista_ausencias' %}" class="btn btn-primary btn-sm">Ver Ausencias</a>
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-md-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title fw-bold">🔔 Panel de Recordatorios</h5>
-        <p class="card-text text-muted small">Seguimiento de las notificaciones de turnos enviadas.</p>
-        <a href="{% url 'app:lista_recordatorios' %}" class="btn btn-secondary btn-sm">Ver Notificaciones</a>
-      </div>
-    </div>
-  </div>
-</div>
+</section>
 {% endblock %}
