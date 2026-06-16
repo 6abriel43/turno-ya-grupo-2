@@ -3,59 +3,80 @@
 {% block title %}Medicos - TurnoYa{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
-  <div>
-    <h2 class="h4 mb-1">Medicos</h2>
-    <p class="text-muted mb-0">Listado de profesionales de la clinica.</p>
+<section class="page-header">
+  <div class="page-heading">
+    <span class="page-icon">{% include "includes/iconos.html" with icono="medico" %}</span>
+    <div>
+      <h1 class="page-title">Medicos</h1>
+      <p class="page-subtitle">Listado de profesionales de la clinica.</p>
+    </div>
   </div>
-</div>
+</section>
 
-<form method="get" class="row g-2 align-items-end mb-3">
-  <div class="col-12 col-md-6 col-lg-4">
-    <label for="especialidad" class="form-label">Especialidad</label>
-    <select name="especialidad" id="especialidad" class="form-select">
-      <option value="">Todas</option>
-      {% for especialidad in especialidades %}
-        <option value="{{ especialidad.id }}" {% if especialidad.id|stringformat:"s" == especialidad_seleccionada %}selected{% endif %}>
-          {{ especialidad.nombre }}
-        </option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="col-12 col-md-auto">
-    <button type="submit" class="btn btn-success w-100">Filtrar</button>
-  </div>
-  <div class="col-12 col-md-auto">
-    <a href="{% url 'app:lista_medicos' %}" class="btn btn-outline-secondary w-100">Limpiar</a>
-  </div>
-</form>
+<section class="app-card mb-4">
+  <form method="get" class="row g-3 align-items-end">
+    <div class="col-12 col-lg-5">
+      <label for="especialidad" class="form-label fw-bold">Especialidad</label>
+      <select name="especialidad" id="especialidad" class="form-select">
+        <option value="">Todas</option>
+        {% for especialidad in especialidades %}
+          <option value="{{ especialidad.id }}" {% if especialidad.id|stringformat:"s" == especialidad_seleccionada %}selected{% endif %}>
+            {{ especialidad.nombre }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-md-auto">
+      <button type="submit" class="btn btn-success-app w-100 px-4">
+        {% include "includes/iconos.html" with icono="filtro" %}
+        <span>Filtrar</span>
+      </button>
+    </div>
+    <div class="col-12 col-md-auto">
+      <a href="{% url 'app:lista_medicos' %}" class="btn btn-outline-app w-100 px-4">
+        {% include "includes/iconos.html" with icono="limpiar" %}
+        <span>Limpiar</span>
+      </a>
+    </div>
+  </form>
 
-<div class="table-responsive">
-  <table class="table table-hover align-middle">
-    <thead class="table-light">
-      <tr>
-        <th>Apellido</th>
-        <th>Nombre</th>
-        <th>Matricula</th>
-        <th>Especialidad</th>
-        <th>Obra social</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for medico in medicos %}
-      <tr>
-        <td>{{ medico.apellido }}</td>
-        <td>{{ medico.nombre }}</td>
-        <td><code>{{ medico.matricula }}</code></td>
-        <td>{{ medico.especialidad.nombre }}</td>
-        <td>{{ medico.obra_social.nombre|default:"-" }}</td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="5" class="text-center text-muted py-4">No hay medicos para mostrar.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+  <hr class="section-divider">
+
+  <div class="table-card shadow-none">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle app-table">
+        <thead>
+          <tr>
+            <th>Apellido</th>
+            <th>Nombre</th>
+            <th>Matricula</th>
+            <th>Especialidad</th>
+            <th>Obra social</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for medico in medicos %}
+            <tr>
+              <td>{{ medico.apellido }}</td>
+              <td>{{ medico.nombre }}</td>
+              <td><code>{{ medico.matricula }}</code></td>
+              <td>{{ medico.especialidad.nombre }}</td>
+              <td>{{ medico.obra_social.nombre|default:"-" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <div class="empty-icon">{% include "includes/iconos.html" with icono="medico" %}</div>
+                  <p class="empty-title mb-1">No hay medicos para mostrar.</p>
+                  <p class="mb-0">Proba cambiando el filtro de especialidad.</p>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
 {% endblock %}

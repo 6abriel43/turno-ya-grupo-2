@@ -3,43 +3,63 @@
 {% block title %}Turnos - TurnoYa{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Listado de Turnos</h2>
-    <a href="{% url 'app:crear_turno' %}" class="btn btn-primary">Nuevo Turno</a>
-</div>
+<section class="page-header">
+  <div>
+    <h1 class="page-title">Listado de Turnos</h1>
+    <p class="page-subtitle">Gestiona y visualiza todos los turnos registrados en el sistema.</p>
+  </div>
+  <a href="{% url 'app:crear_turno' %}" class="btn btn-primary-app px-4">
+    {% include "includes/iconos.html" with icono="mas" %}
+    <span>Nuevo Turno</span>
+  </a>
+</section>
 
-<div class="table-responsive">
-    <table class="table table-hover">
-        <thead class="table-light">
-            <tr>
-                <th>Fecha y Hora</th>
-                <th>Paciente</th>
-                <th>Médico</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for turno in turnos %}
-            <tr>
-                <td>{{ turno.fecha_hora|date:"d/m/Y H:i" }}</td>
-                <td>{{ turno.paciente.apellido }}, {{ turno.paciente.nombre }}</td>
-                <td>Dr/a. {{ turno.medico.apellido }}</td>
-                <td>
-                    {% if turno.esta_pendiente %}
-                        <span class="badge bg-warning text-dark">Pendiente</span>
-                    {% elif turno.estado == 'CONFIRMADO' %}
-                        <span class="badge bg-success">Confirmado</span>
-                    {% else %}
-                        <span class="badge bg-danger">Cancelado</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="4" class="text-center py-4 text-muted">No hay turnos registrados en el sistema.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
+<section class="table-card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle app-table">
+      <thead>
+        <tr>
+          <th>Fecha y Hora</th>
+          <th>Paciente</th>
+          <th>Medico</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for turno in turnos %}
+          <tr>
+            <td>{{ turno.fecha_hora|date:"d/m/Y H:i" }}</td>
+            <td>{{ turno.paciente.apellido }}, {{ turno.paciente.nombre }}</td>
+            <td>Dr/a. {{ turno.medico.apellido }}</td>
+            <td>
+              {% if turno.esta_pendiente %}
+                <span class="badge badge-soft text-bg-warning">Pendiente</span>
+              {% elif turno.estado == 'CONFIRMADO' or turno.estado == 'ACEPTADO' %}
+                <span class="badge badge-soft text-bg-success">{{ turno.estado|title }}</span>
+              {% elif turno.estado == 'FINALIZADO' %}
+                <span class="badge badge-soft text-bg-primary">Finalizado</span>
+              {% else %}
+                <span class="badge badge-soft text-bg-danger">{{ turno.estado|title }}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="4">
+              <div class="empty-state">
+                <div class="empty-icon">{% include "includes/iconos.html" with icono="turnos" %}</div>
+                <p class="empty-title mb-1">No hay turnos registrados en el sistema.</p>
+                <p class="mb-4">Comienza creando un nuevo turno para tus pacientes.</p>
+                <a href="{% url 'app:crear_turno' %}" class="btn btn-outline-app">
+                  {% include "includes/iconos.html" with icono="mas" %}
+                  <span>Crear Primer Turno</span>
+                </a>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
     </table>
-</div>
+  </div>
+</section>
 {% endblock %}

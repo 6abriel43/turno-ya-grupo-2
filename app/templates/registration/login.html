@@ -3,35 +3,55 @@
 {% block title %}Ingresar - TurnoYa{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-12 col-md-6 col-lg-5">
-    <div class="card shadow-sm mt-4">
-      <div class="card-body p-4">
-        <h1 class="h4 mb-4 text-center">Ingresar</h1>
-
-        {% if form.errors %}
-          <div class="alert alert-danger" role="alert">
-            Usuario o contrasena incorrectos.
-          </div>
-        {% endif %}
-
-        <form method="post" novalidate>
-          {% csrf_token %}
-
-          <div class="mb-3">
-            <label for="{{ form.username.id_for_label }}" class="form-label">Usuario</label>
-            {{ form.username }}
-          </div>
-
-          <div class="mb-3">
-            <label for="{{ form.password.id_for_label }}" class="form-label">Contrasena</label>
-            {{ form.password }}
-          </div>
-
-          <button type="submit" class="btn btn-success w-100">Ingresar</button>
-        </form>
-      </div>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="text-center mb-4">
+      <div class="page-icon mx-auto mb-3">{% include "includes/iconos.html" with icono="candado" %}</div>
+      <h1 class="page-title">Ingresar</h1>
+      <p class="page-subtitle">Accede a tu cuenta para continuar</p>
     </div>
+
+    {% if form.errors %}
+      <div class="alert alert-danger" role="alert">
+        Usuario o contrasena incorrectos.
+      </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label for="{{ form.username.id_for_label }}" class="form-label fw-bold">Usuario</label>
+        <input
+          type="text"
+          name="{{ form.username.name }}"
+          id="{{ form.username.id_for_label }}"
+          value="{{ form.username.value|default_if_none:'' }}"
+          class="form-control"
+          placeholder="Ingresa tu usuario"
+          autocomplete="username"
+        >
+      </div>
+
+      <div class="mb-3">
+        <label for="{{ form.password.id_for_label }}" class="form-label fw-bold">Contrasena</label>
+        <input
+          type="password"
+          name="{{ form.password.name }}"
+          id="{{ form.password.id_for_label }}"
+          class="form-control"
+          placeholder="Ingresa tu contrasena"
+          autocomplete="current-password"
+        >
+      </div>
+
+      <button type="submit" class="btn btn-success-app w-100 py-3 mt-2">
+        {% include "includes/iconos.html" with icono="salir" %}
+        <span>Ingresar</span>
+      </button>
+    </form>
+
+    <p class="text-center text-muted small mb-0 mt-4">Tu informacion esta protegida y segura</p>
   </div>
 </div>
 {% endblock %}
