@@ -143,3 +143,65 @@ class TurnoCreateViewTest(TestCase):
             None,
             f"El Dr./a {self.medico.apellido} ya tiene un turno aceptado en este horario."
         )
+
+
+class ClinicaSeguridadTests(TestCase):
+
+    def setUp(self):
+        """Configuración inicial para las pruebas de seguridad del Integrante 1."""
+        # Creamos la infraestructura mínima que piden los validadores del modelo
+        self.os = ObraSocial.objects.create(nombre="OSDE", sigla="OSDE")
+        self.esp = Especialidad.objects.create(nombre="Pediatría")
+
+        # 1. Creamos un usuario Paciente de prueba
+        self.user_paciente = User.objects.create_user(username="paciente_test", password="password123")
+        self.paciente = Paciente.objects.create(
+            usuario=self.user_paciente,
+            nombre="Juan",
+            apellido="Pérez",
+            dni="12345678",
+            email="juan@test.com",
+            obra_social=self.os
+        )
+
+        # 2. Creamos un usuario Médico de prueba
+        self.user_medico = User.objects.create_user(username="medico_test", password="password123")
+        self.medico = Medico.objects.create(
+            usuario=self.user_medico,
+            nombre="Dr",
+            apellido="García",
+            matricula="M456",
+            especialidad=self.esp,
+            obra_social=self.os
+        )
+
+    def test_registro_paciente_combo_exitoso(self):
+        """Prueba que el formulario de registro cree correctamente tanto el User como el Paciente."""
+        datos_registro = {
+            'username': 'nuevo_paciente',
+            'password1': 'ContraSegura123',
+            'password2': 'ContraSegura123',
+            'nombre': 'Carlos',
+            'apellido': 'Gómez',
+            'dni': '87654321',
+            'email': 'carlos@test.com',
+            'telefono': '2901445566',
+            'obra_social': self.os.id
+        }
+        # Mandamos el POST a la ruta de registro
+        response = self.client.post(reverse('app:registro'), data=datos_registro)
+        
+        # Verificamos que redirija al home (302) y que el paciente exista en la BD
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Paciente.objects.filter(dni='87654321').exists())
+
+    def test_paciente_no_puede_ver_lista_turnos_medico(self):
+        """Prueba que un Paciente sea REBOTADO (403) al intentar entrar a la lista de turnos de médicos."""
+        # Logueamos al paciente de prueba
+        self.client.login(username="paciente_test", password="password123")
+        
+        # Intentamos ir a la lista de turnos reservada para médicos
+        response = self.client.get(reverse('app:lista_turnos'))
+        
+        # Verificamos que el candado UserPassesTestMixin lo frene con un 403 (Prohibido)
+        self.assertEqual(response.status_code, 403)

@@ -1,26 +1,15 @@
 """Vistas iniciales para navegar médicos y pantalla de inicio."""
 
 from django.views.generic import ListView, TemplateView, CreateView, View, DetailView, UpdateView
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
 from .models import Medico, Turno, Paciente
-from .forms import TurnoForm #formulario hecho en forms.py
 from django.utils import timezone
-from django.contrib.auth.forms import UserCreationForm
+from .forms import TurnoForm, RegistroPacienteForm, PerfilMedicoForm, PerfilPacienteForm
 from django.db.models import Q
 
 
-class MedicoRequiredMixin(UserPassesTestMixin):
-    def test_func(self):
-        # solo los usuarios medicos pueden entrar
-        return hasattr(self.request.user, "medico")
-
-    def handle_no_permission(self):
-        if self.request.user.is_authenticated:
-            raise PermissionDenied
-        return super().handle_no_permission()
 
 class HomeView(TemplateView):
     """Vista de inicio de la clínica potenciada con las estadísticas de tu Manager."""
@@ -107,52 +96,29 @@ class ListaPacientesView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class HistorialPacienteListView(LoginRequiredMixin, MedicoRequiredMixin, ListView):
-    model = Turno
-    template_name = "clinica/historial_paciente.html"
-    context_object_name = "turnos"
-
-    def get_queryset(self):
-        paciente_id = self.kwargs["paciente_id"]
-        return Turno.objects.select_related("paciente", "medico").filter(
-            paciente_id=paciente_id,
-            medico=self.request.user.medico,
-            estado__in=["ACEPTADO", "CONFIRMADO", "FINALIZADO"],
-        ).order_by("-fecha_hora")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["paciente"] = get_object_or_404(Paciente, pk=self.kwargs["paciente_id"])
-        return context
-
-
-class ObservacionUpdateView(LoginRequiredMixin, MedicoRequiredMixin, UpdateView):
-    model = Turno
-    fields = ["observaciones"]
-    template_name = "clinica/observacion_form.html"
-
-    def get_queryset(self):
-        return Turno.objects.filter(medico=self.request.user.medico)
-
-    def get_success_url(self):
-        return reverse("app:historial_paciente", kwargs={"paciente_id": self.object.paciente_id})
-
-
-class TurnoCreateView(LoginRequiredMixin, CreateView):
+class TurnoCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Turno
     form_class = TurnoForm
     template_name = 'clinica/turno_form.html'
     success_url = reverse_lazy('app:lista_turnos') 
+
+    def test_func(self):
+        #Verifica en tiempo real que el usuario logueado sea un Paciente.
+        return hasattr(self.request.user, 'paciente')
 
     def form_valid(self, form):
         #asignamos automaticamente quien creo el turno
         form.instance.creado_por = self.request.user
         return super().form_valid(form)
 
-class ListaTurnosView(LoginRequiredMixin, ListView):
+class ListaTurnosView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = Turno
     template_name = "clinica/lista_turnos.html"
     context_object_name = "turnos"
+
+    def test_func(self):
+        #Verifica en tiempo real que el usuario logueado sea un Médico."""
+        return hasattr(self.request.user, 'medico')
 
     def get_queryset(self):
         # Ordenamos los turnos mostrando los más recientes primero
@@ -186,11 +152,29 @@ class RecordatorioListView(LoginRequiredMixin, ListView):
 
 class RegistroUsuarioView(CreateView):
     """Vista basada en clase para el alta de nuevos usuarios en el sistema."""
-    form_class = UserCreationForm
+    form_class = RegistroPacienteForm
     template_name = 'registro/registro.html'
     success_url = reverse_lazy('app:home')
 
     def form_valid(self, form):
         """Pipeline de éxito cuando el formulario pasa las validaciones."""
-        response = super().form_valid(form)
-        return response
+        return super().form_valid(form)
+    
+"EDITAR INFORMACION DE PERFIL DE USUARIO"
+class PerfilUpdateView(LoginRequiredMixin, UpdateView):
+    """Vista inteligente para que médicos y pacientes editen su propio perfil."""
+    template_name = 'registro/perfil.html'
+    success_url = reverse_lazy('app:home')
+
+    def get_form_class(self):
+        """Elige el formulario correcto según el rol del usuario logueado."""
+        if hasattr(self.request.user, 'medico'):
+            return PerfilMedicoForm
+        return PerfilPacienteForm
+
+    def get_object(self, queryset=None):
+        """Retorna el objeto (Medico o Paciente) que corresponde al usuario actual."""
+        if hasattr(self.request.user, 'medico'):
+            return self.request.user.medico
+        # Si no es médico, asumimos que es paciente (o tirará error si es admin puro)
+        return self.request.user.paciente
