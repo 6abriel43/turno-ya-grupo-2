@@ -19,4 +19,6 @@ urlpatterns = [
     path("ausencias/", views.AusenciaListView.as_view(), name="lista_ausencias"),
     path("recordatorios/", views.RecordatorioListView.as_view(), name="lista_recordatorios"),
     path("registro/", views.RegistroUsuarioView.as_view(), name="registro"),
+    path("perfil/", views.PerfilUpdateView.as_view(), name="perfil"),
 ]
+
