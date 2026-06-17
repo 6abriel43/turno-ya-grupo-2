@@ -8,8 +8,10 @@ from .models import Medico, Turno, Paciente
 from django.utils import timezone
 from .forms import TurnoForm, RegistroPacienteForm, PerfilMedicoForm, PerfilPacienteForm
 from django.db.models import Q
-
-
+from django.contrib import messages
+from app.models import Ausencia, Turno
+from app.forms import AusenciaForm
+from datetime import datetime, time
 
 class HomeView(TemplateView):
     """Vista de inicio de la clínica potenciada con las estadísticas de tu Manager."""
@@ -178,3 +180,33 @@ class PerfilUpdateView(LoginRequiredMixin, UpdateView):
             return self.request.user.medico
         # Si no es médico, asumimos que es paciente (o tirará error si es admin puro)
         return self.request.user.paciente
+    
+class AusenciaCreateView(LoginRequiredMixin, CreateView):
+    model = Ausencia
+    form_class = AusenciaForm
+    template_name = 'clinica/ausencia_form.html'
+    success_url = reverse_lazy('app:home')
+
+    def form_valid(self, form):
+        # Asignamos al médico logueado(Se asume la relación OneToOne con User)
+        form.instance.medico = self.request.user.medico
+        response = super().form_valid(form)
+        
+        #REPROGRAMACIÓN AUTOMÁTICA 
+        #Buscamos turnos del médico que caigan en ese rango de fechas
+        inicio_dt = datetime.combine(self.object.fecha_inicio, time.min)
+        fin_dt = datetime.combine(self.object.fecha_fin, time.max)
+        
+        turnos_afectados = Turno.objects.filter(
+            medico=self.object.medico,
+            fecha_hora__range=(inicio_dt, fin_dt)
+        ).exclude(estado='CANCELADO')
+        
+        for turno in turnos_afectados:
+            turno.estado = 'REPROGRAMACION_PENDIENTE'
+            # Propuesta automatizada base: Se mueve el turno exactamente 1 semana más adelante
+            turno.nueva_fecha_hora = turno.fecha_hora + timedelta(days=7)
+            turno.save()
+            
+        messages.success(self.request, f"Ausencia registrada. Se han afectado {turnos_afectados.count()} turnos para reprogramación.")
+        return response
