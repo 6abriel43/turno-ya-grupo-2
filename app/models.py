@@ -232,13 +232,21 @@ class ClinicaManager(models.Manager):
     """MODELO TURNO"""
 class Turno(models.Model):
     """Representa a un profesional médico disponible para turnos."""
+    ESTADOS = [
+        ('PENDIENTE', 'Pendiente'),
+        ('CONFIRMADO', 'Confirmado'),
+        ('CANCELADO', 'Cancelado'),
+        ('REPROGRAMACION_PENDIENTE', 'Reprogramación Pendiente'),
+    ]
     fecha_hora = models.DateTimeField()
+    nueva_fecha_hora = models.DateTimeField(null=True, blank=True)
     motivo = models.CharField(max_length=255, blank=True, default="")
-    observaciones = models.TextField(blank=True)
-    estado = models.CharField(max_length=20, default="PENDIENTE")
+    observaciones = models.TextField(blank=True, default="")
+    estado = models.CharField(max_length=30, choices=ESTADOS, default='PENDIENTE')
     medico = models.ForeignKey(Medico, on_delete=models.CASCADE, related_name="turnos")
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name="turnos")
     creado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="turnos_creados")
+    
     objects = models.Manager()
     analitica = ClinicaManager()
 
