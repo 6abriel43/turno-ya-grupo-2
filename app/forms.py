@@ -1,11 +1,33 @@
 from datetime import timedelta
 
 from django import forms
+from app.models import Ausencia
 from django.utils import timezone
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Turno ,Paciente, ObraSocial, Medico
 
+
+
+class AusenciaForm(forms.ModelForm):
+    class Meta:
+        model = Ausencia
+        fields = ['motivo', 'fecha_inicio', 'fecha_fin']
+        widgets = {
+            'motivo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. Congreso Médico'}),
+            'fecha_inicio': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'fecha_fin': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        fecha_inicio = cleaned_data.get('fecha_inicio')
+        fecha_fin = cleaned_data.get('fecha_fin')
+
+        if fecha_inicio and fecha_fin:
+            if fecha_fin < fecha_inicio:
+                raise forms.ValidationError("La fecha de finalización no puede ser anterior a la fecha de inicio.")
+        return cleaned_data
 
 class TurnoForm(forms.ModelForm):
     class Meta:
