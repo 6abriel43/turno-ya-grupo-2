@@ -1,8 +1,9 @@
 """Vistas iniciales para navegar médicos y pantalla de inicio."""
 
 from django.views.generic import ListView, TemplateView, CreateView, View, DetailView, UpdateView
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
 from .models import Medico, Turno, Paciente
 from django.utils import timezone
@@ -12,6 +13,18 @@ from django.contrib import messages
 from app.models import Ausencia, Turno
 from app.forms import AusenciaForm
 from datetime import datetime, time
+
+
+class MedicoRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        # solo los usuarios medicos pueden entrar
+        return hasattr(self.request.user, "medico")
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied
+        return super().handle_no_permission()
+
 
 class HomeView(TemplateView):
     """Vista de inicio de la clínica potenciada con las estadísticas de tu Manager."""
@@ -96,6 +109,37 @@ class ListaPacientesView(LoginRequiredMixin, ListView):
             )
 
         return queryset
+
+
+class HistorialPacienteListView(LoginRequiredMixin, MedicoRequiredMixin, ListView):
+    model = Turno
+    template_name = "clinica/historial_paciente.html"
+    context_object_name = "turnos"
+
+    def get_queryset(self):
+        paciente_id = self.kwargs["paciente_id"]
+        return Turno.objects.select_related("paciente", "medico").filter(
+            paciente_id=paciente_id,
+            medico=self.request.user.medico,
+            estado__in=["ACEPTADO", "CONFIRMADO", "FINALIZADO"],
+        ).order_by("-fecha_hora")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["paciente"] = get_object_or_404(Paciente, pk=self.kwargs["paciente_id"])
+        return context
+
+
+class ObservacionUpdateView(LoginRequiredMixin, MedicoRequiredMixin, UpdateView):
+    model = Turno
+    fields = ["observaciones"]
+    template_name = "clinica/observacion_form.html"
+
+    def get_queryset(self):
+        return Turno.objects.filter(medico=self.request.user.medico)
+
+    def get_success_url(self):
+        return reverse("app:historial_paciente", kwargs={"paciente_id": self.object.paciente_id})
 
 
 class TurnoCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
