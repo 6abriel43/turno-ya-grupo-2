@@ -25,6 +25,14 @@
                     </div>
                     <h5 class="card-title fw-bold text-truncate mb-1">{{ recordatorio.turno.paciente }}</h5>
                     <p class="card-text small text-secondary flex-grow-1">{{ recordatorio.mensaje }}</p>
+                    {% if not recordatorio.leido %}
+                        <form method="post" action="{% url 'app:marcar_recordatorio_leido' recordatorio.pk %}" class="mt-2 text-end">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-success py-1 px-2">
+                                Marcar como leído
+                            </button>
+                        </form>
+                    {% endif %}
                     <div class="border-top pt-2 mt-2 bg-light p-2 rounded-2">
                         <span class="d-block small text-muted"><strong>Vía:</strong> {{ recordatorio.get_medio_display }}</span>
                     </div>

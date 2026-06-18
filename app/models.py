@@ -297,6 +297,14 @@ class Turno(models.Model):
         if errors: 
             return None, errors
         instancia.save()
+
+        Recordatorio.new(
+            turno=instancia,
+            fecha_envio=timezone.now(),
+            tipo="SISTEMA",
+            asunto="Turno Creado",
+            mensaje=f"Se ha solicitado un turno para el día {instancia.fecha_hora.strftime('%d/%m/%Y %H:%M')} hs."
+            )
         return instancia, []
     
     def update(self, **kwargs) -> list[str]:
@@ -327,6 +335,14 @@ class Turno(models.Model):
             return [f"El turno no puede ser aceptado porque su estado actual es {self.estado}."]    
         self.estado = "ACEPTADO"
         self.save()
+    
+        Recordatorio.new(
+            turno=self,
+            fecha_envio=timezone.now(),
+            tipo="SISTEMA",
+            asunto="Turno Confirmado",
+            mensaje=f"Tu turno para el {self.fecha_hora.strftime('%d/%m/%Y %H:%M')} hs fue confirmado por el profesional."
+        )
         return []
     
 class Especialidad(models.Model):
