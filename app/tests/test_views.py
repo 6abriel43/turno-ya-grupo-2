@@ -110,7 +110,7 @@ class TurnoCreateViewTest(TestCase):
         self.client = Client()
 
     def test_creacion_turno_valido(self):
-        self.client.login(username='testuser', password='password')
+        self.client.login(username='pacuser', password='password')
         url = reverse('app:crear_turno')
         data = {
             'medico': self.medico.id,
@@ -123,7 +123,7 @@ class TurnoCreateViewTest(TestCase):
         self.assertEqual(response.status_code, 302) # Redirección tras éxito
 
     def test_validacion_turno_duplicado_falla(self):
-        self.client.login(username='testuser', password='password')
+        self.client.login(username='pacuser', password='password')
         fecha = (timezone.now() + timedelta(days=2)).replace(second=0, microsecond=0)
 # creamos un turno ya existente
         Turno.objects.create(medico=self.medico, paciente=self.paciente, fecha_hora=fecha, estado="ACEPTADO")
