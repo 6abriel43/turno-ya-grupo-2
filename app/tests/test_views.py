@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from app.models import Especialidad, Medico, ObraSocial, Paciente, Turno
+from app.models import Especialidad, Medico, ObraSocial, Paciente, Turno, Recordatorio
 from django.utils import timezone
 from datetime import timedelta
 
@@ -205,3 +205,38 @@ class ClinicaSeguridadTests(TestCase):
         
         # Verificamos que el candado UserPassesTestMixin lo frene con un 403 (Prohibido)
         self.assertEqual(response.status_code, 403)
+
+    def test_auto_generacion_recordatorio_al_crear_turno(self):
+        """Verifica que al instanciar un nuevo turno se genere el recordatorio automáticamente."""
+        count_antes = Recordatorio.objects.count()
+        
+        fecha_futura = timezone.now() + timedelta(days=5)
+        turno, errors = Turno.new(
+            fecha_hora=fecha_futura,
+            medico=self.medico,
+            paciente=self.paciente,
+            motivo="Control de Rutina"
+        )
+        
+        self.assertEqual(errors, [])
+        self.assertEqual(Recordatorio.objects.count(), count_antes + 1)
+
+        ultimo_recordatorio = Recordatorio.objects.latest('id')
+        self.assertEqual(ultimo_recordatorio.turno, turno)
+        self.assertEqual(ultimo_recordatorio.asunto, "Turno Creado")
+
+    def test_auto_generacion_recordatorio_al_aceptar_turno(self):
+        """Verifica que al aceptar un turno se dispare la notificación correspondiente."""
+        from app.models import Recordatorio, Turno
+        fecha_futura = timezone.now() + timedelta(days=3)
+        turno, _ = Turno.new(fecha_hora=fecha_futura, medico=self.medico, paciente=self.paciente)
+        
+        count_antes = Recordatorio.objects.count()
+        errors = turno.aceptar()
+        
+        self.assertEqual(errors, [])
+        self.assertEqual(turno.estado, "ACEPTADO")
+        self.assertEqual(Recordatorio.objects.count(), count_antes + 1)
+        
+        ultimo_recordatorio = Recordatorio.objects.latest('id')
+        self.assertEqual(ultimo_recordatorio.asunto, "Turno Confirmado")

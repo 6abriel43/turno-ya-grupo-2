@@ -10,7 +10,7 @@ from django.utils import timezone
 from .forms import TurnoForm, RegistroPacienteForm, PerfilMedicoForm, PerfilPacienteForm
 from django.db.models import Q
 from django.contrib import messages
-from app.models import Ausencia, Turno
+from app.models import Ausencia, Turno, Recordatorio
 from app.forms import AusenciaForm
 from datetime import datetime, time
 
@@ -254,3 +254,20 @@ class AusenciaCreateView(LoginRequiredMixin, CreateView):
             
         messages.success(self.request, f"Ausencia registrada. Se han afectado {turnos_afectados.count()} turnos para reprogramación.")
         return response
+
+class MisRecordatoriosView(LoginRequiredMixin, ListView):
+    """Bandeja de entrada para que el paciente autenticado visualice sus recordatorios."""
+    model = Recordatorio
+    template_name = 'clinica/recordatorios_list.html'
+    context_object_name = 'lista_recordatorios'
+
+    def get_queryset(self):
+        return Recordatorio.objects.filter(turno__paciente__usuario=self.request.user).order_by('-fecha_envio')
+    
+class MarcarRecordatorioLeidoView(LoginRequiredMixin, View):
+    """Acción POST para mutar el estado de lectura del recordatorio de manera segura."""
+    
+    def post(self, request, pk):
+        recordatorio = get_object_or_404(Recordatorio, pk=pk, turno__paciente__usuario=request.user)
+        recordatorio.marcar_como_leido()
+        return redirect('app:mis_recordatorios')
