@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Ausencia - TurnoYa{% endblock %}
+
+{% block content %}
+<section class="page-header mb-4">
+  <div class="page-heading">
+    <span class="page-icon">{% include "includes/iconos.html" with icono="ausencias" %}</span>
+    <div>
+      <h1 class="page-title">Registrar Ausencia</h1>
+      <p class="page-subtitle">Carga de licencias y carpetas médicas del personal.</p>
+    </div>
+  </div>
+</section>
+
+<section class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    
+    <div class="app-card h-100 p-4">
+      <h2 class="h4 fw-bold mb-2">Detalle de la Licencia</h2>
+      <p class="text-muted mb-4">Al confirmar, el sistema reprogramará automáticamente los turnos afectados.</p>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger shadow-sm">
+            {% for error in form.non_field_errors %}
+              <strong>⚠️ Error:</strong> {{ error }}
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% for field in form %}
+          <div class="mb-3">
+            <label for="{{ field.id_for_label }}" class="form-label fw-bold text-secondary">
+              {{ field.label }}
+            </label>
+            
+            {{ field }} {% if field.errors %}
+              {% for error in field.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4 pt-3 border-top">
+          <a href="{% url 'app:home' %}" class="btn btn-secondary px-4">Cancelar</a>
+          <button type="submit" class="btn btn-primary-app px-4 d-flex align-items-center gap-2">
+            Registrar y Reprogramar
+          </button>
+        </div>
+      </form>
+      
+    </div>
+  </div>
+</section>
+{% endblock %}
