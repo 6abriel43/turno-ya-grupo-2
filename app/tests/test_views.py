@@ -1,9 +1,9 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from app.models import Especialidad, Medico, ObraSocial, Paciente, Turno, Recordatorio
+from app.models import Especialidad, Medico, ObraSocial, Paciente, Turno, Recordatorio, Ausencia
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, date
 
 class VistasTestCase(TestCase):
     def setUp(self):
@@ -240,3 +240,42 @@ class ClinicaSeguridadTests(TestCase):
         
         ultimo_recordatorio = Recordatorio.objects.latest('id')
         self.assertEqual(ultimo_recordatorio.asunto, "Turno Confirmado")
+
+class ReprogramacionSystemTest(TestCase):
+    def setUp(self):
+        unique_id = id(self)
+        self.user_med = User.objects.create_user(username=f"med_rep_{unique_id}", password="123")
+        self.user_pac = User.objects.create_user(username=f"pac_rep_{unique_id}", password="123")
+        
+        self.esp = Especialidad.objects.create(nombre="Cardiología")
+        self.os = ObraSocial.objects.create(nombre="OSDE")
+        
+        self.medico = Medico.objects.create(usuario=self.user_med, nombre="Dr. Alan", apellido="Turing", matricula="MP-77", especialidad=self.esp, obra_social=self.os)
+        self.paciente = Paciente.objects.create(usuario=self.user_pac, nombre="John", apellido="Doe", dni=f"99{unique_id}"[:8], email="j@j.com", obra_social=self.os)
+        
+        # Turno agendado para mañana a las 10:00
+        mañana = timezone.now() + timedelta(days=1)
+        self.fecha_turno = mañana.replace(hour=10, minute=0, second=0, microsecond=0)
+        self.turno = Turno.objects.create(fecha_hora=self.fecha_turno, medico=self.medico, paciente=self.paciente, estado='CONFIRMADO')
+
+    def test_crear_ausencia_reprograma_turnos_automaticamente(self):
+        # Logueamos al médico para simular la petición de ausencia
+        self.client.login(username=self.user_med.username, password="123")
+        
+        # El médico registra ausencia para mañana 
+        fecha_ausencia = date.today() + timedelta(days=1)
+        url = reverse('app:crear_ausencia')
+        data = {
+            'motivo': 'Congreso de Sistemas',
+            'fecha_inicio': fecha_ausencia,
+            'fecha_fin': fecha_ausencia
+        }
+        
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302) #Redirección exitosa
+        
+        # Verificamos que el motor de reprogramación transformo el turno
+        self.turno.refresh_from_db()
+        self.assertEqual(self.turno.estado, 'REPROGRAMACION_PENDIENTE')
+        self.assertIsNotNone(self.turno.nueva_fecha_hora)
+        self.assertEqual(self.turno.nueva_fecha_hora, self.fecha_turno + timedelta(days=7))
