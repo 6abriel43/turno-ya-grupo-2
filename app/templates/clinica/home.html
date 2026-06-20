@@ -16,6 +16,50 @@
   </div>
 </section>
 
+{% if reprogramaciones_alertas %}
+<section class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="alert alert-warning border-0 shadow-sm p-4 mb-0" role="alert" style="border-left: 5px solid #ffc107 !important; background-color: #fffdf5;">
+      <h4 class="alert-heading fw-bold d-flex align-items-center mb-3" style="color: #856404;">
+        <span class="me-2">{% include "includes/iconos.html" with icono="ausencias" %}</span>
+        Avisos Importantes de Turnos / Cambio de Agenda
+      </h4>
+      
+      {% for alerta in reprogramaciones_alertas %}
+        <div class="p-3 mb-3 rounded" style="background-color: #fdf8e2; border: 1px solid #f5ecb8;">
+          <p class="mb-2 text-dark">
+            El profesional médico <strong>{{ alerta.medico.apellido }}, {{ alerta.medico.nombre }}</strong> no podrá brindar atención el día 
+            <span class="badge bg-secondary">{{ alerta.fecha_hora|date:"d/m/Y H:i" }}</span> debido a una ausencia validada en el sistema.
+          </p>
+          <p class="mb-3 text-dark">
+            En cumplimiento con los Criterios de Aceptación, se ha calculado una fecha alternativa automática: 
+            <strong class="text-success">{{ alerta.nueva_fecha_hora|date:"d/m/Y H:i" }}</strong>. Por favor, confirme si acepta la propuesta.
+          </p>
+          
+          <div class="d-flex gap-2">
+            <form action="{% url 'app:procesar_reprogramacion' alerta.pk %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="accion" value="aceptar">
+              <button type="submit" class="btn btn-sm btn-success px-3">
+                <span>Aceptar nueva fecha</span>
+              </button>
+            </form>
+            
+            <form action="{% url 'app:procesar_reprogramacion' alerta.pk %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="accion" value="rechazar">
+              <button type="submit" class="btn btn-sm btn-danger px-3">
+                <span>Cancelar Turno</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <section class="row g-4 mb-4">
   <div class="col-12 col-sm-6 col-xl-3">
     <div class="stat-card stat-card-blue">
