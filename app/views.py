@@ -271,3 +271,22 @@ class MarcarRecordatorioLeidoView(LoginRequiredMixin, View):
         recordatorio = get_object_or_404(Recordatorio, pk=pk, turno__paciente__usuario=request.user)
         recordatorio.marcar_como_leido()
         return redirect('app:mis_recordatorios')
+
+class ProcesarReprogramacionView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        turno = get_object_or_404(Turno, pk=pk, paciente__usuario=request.user)
+        accion = request.POST.get('accion')
+        
+        if accion == 'aceptar' and turno.nueva_fecha_hora:
+            turno.fecha_hora = turno.nueva_fecha_hora
+            turno.nueva_fecha_hora = None
+            turno.estado = 'CONFIRMADO'
+            turno.save()
+            messages.success(request, "Ha aceptado la reprogramación del turno con éxito.")
+        elif accion == 'rechazar':
+            turno.estado = 'CANCELADO'
+            turno.nueva_fecha_hora = None
+            turno.save()
+            messages.warning(request, "Ha rechazado la propuesta. El turno fue cancelado.")
+            
+        return redirect('app:home')
