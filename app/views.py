@@ -26,12 +26,18 @@ class MedicoRequiredMixin(UserPassesTestMixin):
         return super().handle_no_permission()
 
 
-class HomeView(TemplateView):
+class HomeView(LoginRequiredMixin, TemplateView):
     """Vista de inicio de la clínica potenciada con las estadísticas de tu Manager."""
     template_name = "clinica/home.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        #Estadisticas de datos base:
+        context['total_medicos'] = Medico.objects.count()
+        context['total_pacientes'] = Paciente.objects.count()
+        context['total_turnos'] = Turno.objects.count()
+
+
         # Importación local para evitar importes circulares entre archivos
         from .models import Turno 
         
@@ -45,6 +51,14 @@ class HomeView(TemplateView):
                 'total_ausencias_activas': 0
             }
         context['fecha_hoy'] = timezone.now().date()
+        
+        #Aelrtas de reprogramacion de turno para pacientes
+        if hasattr(self.request.user, 'paciente'):
+            context['reprogramaciones_alertas'] = Turno.objects.filter(
+                paciente__usuario=self.request.user,
+                estado='REPROGRAMACION_PENDIENTE'
+            ).select_related('medico') #optimización select_related para evitar el problema N+1 queries al leer el apellido del médico en la alerta
+
         return context
 
 class ListaMedicosView(LoginRequiredMixin, ListView):
