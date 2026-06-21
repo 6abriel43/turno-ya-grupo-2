@@ -1,59 +1,87 @@
 {% extends "base.html" %}
 
-{% block title %}Registrar Ausencia - TurnoYa{% endblock %}
+{% block title %}Registrar ausencia - TurnoYa{% endblock %}
 
 {% block content %}
-<section class="page-header mb-4">
+<section class="page-header">
   <div class="page-heading">
     <span class="page-icon">{% include "includes/iconos.html" with icono="ausencias" %}</span>
     <div>
-      <h1 class="page-title">Registrar Ausencia</h1>
-      <p class="page-subtitle">Carga de licencias y carpetas médicas del personal.</p>
+      <h1 class="page-title">Registrar ausencia</h1>
+      <p class="page-subtitle">Carga de licencias y carpetas medicas del personal.</p>
     </div>
   </div>
+  <a href="{% url 'app:home' %}" class="btn btn-outline-app px-4">
+    {% include "includes/iconos.html" with icono="volver" %}
+    <span>Volver</span>
+  </a>
 </section>
 
-<section class="row justify-content-center">
-  <div class="col-12 col-md-8 col-lg-6">
-    
-    <div class="app-card h-100 p-4">
-      <h2 class="h4 fw-bold mb-2">Detalle de la Licencia</h2>
-      <p class="text-muted mb-4">Al confirmar, el sistema reprogramará automáticamente los turnos afectados.</p>
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <section class="app-card form-card">
+      <div class="mb-4">
+        <h2 class="h4 fw-bold mb-2">Detalle de la licencia</h2>
+        <p class="page-subtitle">Completa el motivo y el periodo de ausencia del profesional.</p>
+      </div>
+
+      <div class="form-notice mb-4" role="note">
+        <span class="form-notice-icon">{% include "includes/iconos.html" with icono="alerta" %}</span>
+        <div>
+          <strong>Reprogramacion automatica</strong>
+          <p class="mb-0">Al confirmar, el sistema buscara una nueva fecha para los turnos afectados.</p>
+        </div>
+      </div>
 
       <form method="post" novalidate>
         {% csrf_token %}
 
         {% if form.non_field_errors %}
-          <div class="alert alert-danger shadow-sm">
+          <div class="alert alert-danger" role="alert">
             {% for error in form.non_field_errors %}
-              <strong>⚠️ Error:</strong> {{ error }}
+              <p class="mb-0">{{ error }}</p>
             {% endfor %}
           </div>
         {% endif %}
 
-        {% for field in form %}
-          <div class="mb-3">
-            <label for="{{ field.id_for_label }}" class="form-label fw-bold text-secondary">
-              {{ field.label }}
-            </label>
-            
-            {{ field }} {% if field.errors %}
-              {% for error in field.errors %}
-                <div class="text-danger small mt-1">{{ error }}</div>
-              {% endfor %}
-            {% endif %}
-          </div>
-        {% endfor %}
+        <div class="mb-4">
+          <label for="{{ form.motivo.id_for_label }}" class="form-label fw-bold">Motivo</label>
+          {{ form.motivo }}
+          {% for error in form.motivo.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
 
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4 pt-3 border-top">
-          <a href="{% url 'app:home' %}" class="btn btn-secondary px-4">Cancelar</a>
-          <button type="submit" class="btn btn-primary-app px-4 d-flex align-items-center gap-2">
-            Registrar y Reprogramar
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label fw-bold">Fecha de inicio</label>
+            {{ form.fecha_inicio }}
+            {% for error in form.fecha_inicio.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label for="{{ form.fecha_fin.id_for_label }}" class="form-label fw-bold">Fecha de finalizacion</label>
+            {{ form.fecha_fin }}
+            {% for error in form.fecha_fin.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-actions mt-4">
+          <a href="{% url 'app:home' %}" class="btn btn-outline-app px-4">
+            {% include "includes/iconos.html" with icono="volver" %}
+            <span>Cancelar</span>
+          </a>
+          <button type="submit" class="btn btn-success-app px-4">
+            {% include "includes/iconos.html" with icono="ausencias" %}
+            <span>Registrar y reprogramar</span>
           </button>
         </div>
       </form>
-      
-    </div>
+    </section>
   </div>
-</section>
+</div>
 {% endblock %}
