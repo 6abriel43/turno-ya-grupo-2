@@ -389,10 +389,68 @@ body.app-body {
   justify-content: center;
 }
 
-.login-card {
+.login-card,
+.register-card {
   width: 100%;
-  max-width: 31rem;
   padding: 2.3rem;
+}
+
+.login-card {
+  max-width: 31rem;
+}
+
+.register-wrap {
+  min-height: calc(100vh - 12rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-card {
+  max-width: 50rem;
+  background: var(--app-card);
+  border: 1px solid var(--app-border);
+  border-radius: 0.65rem;
+  box-shadow: var(--app-shadow);
+}
+
+.registration-form input,
+.registration-form select {
+  width: 100%;
+  min-height: 3.15rem;
+  padding: 0.75rem 0.9rem;
+  color: var(--app-text);
+  background-color: #ffffff;
+  border: 1px solid #ccd8e3;
+  border-radius: 0.375rem;
+}
+
+.registration-form input:focus,
+.registration-form select:focus {
+  border-color: var(--app-primary);
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 140, 122, 0.14);
+}
+
+.form-help {
+  color: var(--app-muted);
+  font-size: 0.78rem;
+}
+
+.form-help ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.register-link {
+  color: var(--app-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.register-link:hover {
+  color: var(--app-primary-dark);
+  text-decoration: underline;
 }
 
 .form-control,
