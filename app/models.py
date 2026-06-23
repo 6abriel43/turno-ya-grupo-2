@@ -258,36 +258,64 @@ class Turno(models.Model):
         return f"Turno: {self.fecha_hora} - Paciente: {self.paciente.apellido}"
     
     def clean(self):
-        """Validación oficial para formularios de Django."""
+        """Ataja los errores para mostrarlos prolijos en el panel de Admin y Forms."""
         super().clean()
-        if self.fecha_hora and self.medico:
-            duplicado = Turno.objects.filter(
-                medico=self.medico,
-                fecha_hora=self.fecha_hora,
-                estado="ACEPTADO"
-            ).exclude(id=self.id).exists()
-            
-            if duplicado:
-                raise ValidationError(f"El Dr./a {self.medico.apellido} ya tiene un turno aceptado en este horario.")
+        errores = self.validate()
+        if errores:
+            from django.core.exceptions import ValidationError
+            raise ValidationError(errores)
 
     def validate(self) -> list[str]:
-        """Validación interna de nuestro framework de capas."""
         errors = []
-        if not self.fecha_hora or not self.medico or not self.paciente:
-            errors.append("Datos incompletos.")
-        if self.fecha_hora and self.fecha_hora < timezone.now():
-            errors.append("No se pueden solicitar turnos en fechas pasadas.")
+        if not hasattr(self, 'medico') or not self.medico: 
+            errors.append("El médico es obligatorio.")
+        if not hasattr(self, 'paciente') or not self.paciente: 
+            errors.append("El paciente es obligatorio.")
+        if not self.fecha_hora:
+            errors.append("La fecha y hora son obligatorias.")
+            return errors  # Cortamos acá si no hay fecha para no romper el código de abajo
+
+        # --- INTELIGENCIA DE NEGOCIO 1: FRANJAS HORARIAS ---
+        # 1. Mapeamos el día de la semana de Python (0=Lunes) a tu diccionario DIAS
+        mapeo_dias = {
+            0: "LUN", 1: "MAR", 2: "MIE",
+            3: "JUE", 4: "VIE", 5: "SAB", 6: "DOM"
+        }
+        dia_semana = mapeo_dias[self.fecha_hora.weekday()]
+        hora_elegida = self.fecha_hora.time()
+
+        # 2. Buscamos entre todas las franjas vinculadas a este médico si alguna coincide con el día
+        franjas_del_dia = self.medico.franjas.filter(dia=dia_semana)
         
-        # También lo dejamos acá para los tests de modelos independientes
-        if self.fecha_hora and self.medico:
-            duplicado = Turno.objects.filter(
+        if not franjas_del_dia.exists():
+            errors.append(f"El médico no atiende el día {dia_semana}.")
+        else:
+            # 3. Verificamos si la hora elegida entra en alguna de sus franjas de ese día
+            horario_valido = False
+            for franja in franjas_del_dia:
+                if franja.hora_inicio <= hora_elegida <= franja.hora_fin:
+                    horario_valido = True
+                    break
+            
+            if not horario_valido:
+                errors.append(f"El médico no atiende a esa hora el día {dia_semana}.")
+
+        # --- INTELIGENCIA DE NEGOCIO 2: AUSENCIAS ---
+        # Verificamos que el médico no se haya pedido licencia ese día
+        try:
+            from .models import Ausencia # Importación local para evitar errores circulares
+            fecha_elegida = self.fecha_hora.date()
+            medico_ausente = Ausencia.objects.filter(
                 medico=self.medico,
-                fecha_hora=self.fecha_hora,
-                estado="ACEPTADO"
-            ).exclude(id=self.id).exists()
-            if duplicado:
-                errors.append(f"El Dr./a {self.medico.apellido} ya tiene un turno aceptado en este horario.")
-                
+                fecha_inicio__lte=fecha_elegida,
+                fecha_fin__gte=fecha_elegida
+            ).exists()
+
+            if medico_ausente:
+                errors.append("El médico se encuentra de licencia/ausente en esa fecha.")
+        except ImportError:
+            pass # Pasa de largo si tu compañero todavía no creó la clase Ausencia
+
         return errors
     
     @classmethod
