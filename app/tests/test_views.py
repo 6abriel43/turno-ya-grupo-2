@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from app.models import Especialidad, Medico, ObraSocial, Paciente, Turno, Recordatorio, Ausencia
+from app.models import Especialidad, FranjaHoraria, Medico, ObraSocial, Paciente, Turno, Recordatorio, Ausencia
 from django.utils import timezone
 from datetime import timedelta, date
 
@@ -108,6 +108,10 @@ class TurnoCreateViewTest(TestCase):
             obra_social=self.os,
         )
         self.client = Client()
+        # Franjas horarias para todos los días (requerido por Turno.validate)
+        for dia in ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"]:
+            franja = FranjaHoraria.objects.create(dia=dia, hora_inicio="00:00", hora_fin="23:59")
+            franja.medicos.add(self.medico)
 
     def test_creacion_turno_valido(self):
         self.client.login(username='pacuser', password='password')
@@ -174,6 +178,10 @@ class ClinicaSeguridadTests(TestCase):
             especialidad=self.esp,
             obra_social=self.os
         )
+        # Franjas horarias para todos los días (requerido por Turno.validate)
+        for dia in ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"]:
+            franja = FranjaHoraria.objects.create(dia=dia, hora_inicio="00:00", hora_fin="23:59")
+            franja.medicos.add(self.medico)
 
     def test_registro_paciente_combo_exitoso(self):
         """Prueba que el formulario de registro cree correctamente tanto el User como el Paciente."""

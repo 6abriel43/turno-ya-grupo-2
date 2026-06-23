@@ -619,6 +619,12 @@ class RecordatorioModelTest(TestCase):
             email="maria@mail.com",
             obra_social=self.obra_social
         )
+
+        # Franjas horarias para todos los días (requerido por Turno.validate)
+        from app.models import FranjaHoraria
+        for dia in ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"]:
+            franja = FranjaHoraria.objects.create(dia=dia, hora_inicio="00:00", hora_fin="23:59")
+            franja.medicos.add(self.medico)
         
         self.turno, _ = Turno.new(
             fecha_hora=timezone.now() + timedelta(days=1), medico=self.medico, paciente=self.paciente

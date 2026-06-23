@@ -554,7 +554,11 @@ class Recordatorio(models.Model):
 
     def validate(self) -> list[str]:
         errors = []
-        if not self.turno or not self.fecha_envio or not self.asunto:
+        try:
+            has_turno = bool(self.turno)
+        except Recordatorio.turno.RelatedObjectDoesNotExist:
+            has_turno = False
+        if not has_turno or not self.fecha_envio or not self.asunto:
             errors.append("Datos incompletos.")
         return errors
 

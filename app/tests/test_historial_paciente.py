@@ -5,7 +5,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from app.models import Especialidad, Medico, ObraSocial, Paciente, Turno
+from app.models import Especialidad, FranjaHoraria, Medico, ObraSocial, Paciente, Turno
 
 
 class HistorialPacienteTest(TestCase):
@@ -44,6 +44,12 @@ class HistorialPacienteTest(TestCase):
             email="ana@test.com",
             obra_social=self.obra_social,
         )
+
+        # Franjas horarias para todos los días (requerido por Turno.clean/validate)
+        for dia in ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"]:
+            franja = FranjaHoraria.objects.create(dia=dia, hora_inicio="00:00", hora_fin="23:59")
+            franja.medicos.add(self.medico)
+            franja.medicos.add(self.otro_medico)
 
         self.turno_confirmado = Turno.objects.create(
             fecha_hora=timezone.now() - timedelta(days=5),

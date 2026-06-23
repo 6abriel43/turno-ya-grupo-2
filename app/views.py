@@ -12,7 +12,7 @@ from django.db.models import Q
 from django.contrib import messages
 from app.models import Ausencia, Turno, Recordatorio
 from app.forms import AusenciaForm
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 
 class MedicoRequiredMixin(UserPassesTestMixin):
