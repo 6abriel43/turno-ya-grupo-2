@@ -128,55 +128,262 @@ class MedicoModelTest(TestCase):
         self.assertEqual(self.medico.nombre, "Laura")  # El nombre no debería haber cambiado
 
 class TurnoModelTest(TestCase):
-    """TESTS DE MODELO TURNO"""
+    """Verifica comportamiento básico, validaciones y reglas de negocio del modelo Turno."""
+
     def setUp(self):
-        # Creamos las dependencias completas para que no tire IntegrityError
+        from app.models import FranjaHoraria
+
+        # Dependencias base
         self.user_med = User.objects.create_user(username="med_turno", password="123")
         self.user_pac = User.objects.create_user(username="pac_turno", password="123")
         self.especialidad = Especialidad.objects.create(nombre="Cardiología")
         self.obra_social = ObraSocial.objects.create(nombre="OSDE")
 
-        self.medico = Medico.objects.create(usuario=self.user_med, nombre="Juan", apellido="Perez", matricula="MP-1", especialidad=self.especialidad, obra_social=self.obra_social)
-        self.paciente = Paciente.objects.create(usuario=self.user_pac, nombre="Maria", apellido="Gomez", dni="111", email="a@a.com", obra_social=self.obra_social)
+        self.medico = Medico.objects.create(
+            usuario=self.user_med, nombre="Juan", apellido="Perez",
+            matricula="MP-1", especialidad=self.especialidad,
+            obra_social=self.obra_social,
+        )
+        self.paciente = Paciente.objects.create(
+            usuario=self.user_pac, nombre="Maria", apellido="Gomez",
+            dni="111", email="a@a.com", obra_social=self.obra_social,
+        )
 
-    # --- Tests validate, new y update ---
-    def test_validate_datos_incompletos_retorna_error(self):
-        turno_malo = Turno(motivo="Falta medico y paciente")
-        errors = turno_malo.validate()
-        self.assertIn("Datos incompletos.", errors)
+        # Creamos franjas horarias para TODOS los días de la semana (08:00-18:00)
+        # para que los tests de flujo normal no fallen por falta de franja.
+        for dia_code in ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"]:
+            franja = FranjaHoraria.objects.create(
+                dia=dia_code,
+                hora_inicio="08:00",
+                hora_fin="18:00",
+            )
+            franja.medicos.add(self.medico)
 
-    def test_new_crea_turno_valido(self):
-        fecha = timezone.now() + timedelta(days=2)
+    # ────────────────────────────────────────────
+    # Helpers
+    # ────────────────────────────────────────────
+
+    def _fecha_futura(self, days=2, hour=10):
+        """Retorna un datetime futuro a las `hour`:00 dentro de la franja configurada."""
+        return (timezone.now() + timedelta(days=days)).replace(
+            hour=hour, minute=0, second=0, microsecond=0,
+        )
+
+    # ────────────────────────────────────────────
+    # __str__
+    # ────────────────────────────────────────────
+
+    def test_str_incluye_paciente_y_fecha(self):
+        fecha = self._fecha_futura()
+        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
+        texto = str(turno)
+        self.assertIn("Gomez", texto)
+        self.assertIn("Turno", texto)
+
+    # ────────────────────────────────────────────
+    # validate
+    # ────────────────────────────────────────────
+
+    def test_validate_sin_medico_retorna_error(self):
+        """Sin médico ni fecha: el validate retorna errores sin llegar a franjas horarias."""
+        turno = Turno(paciente=self.paciente)
+        errors = turno.validate()
+        self.assertIn("El médico es obligatorio.", errors)
+
+    def test_validate_sin_paciente_retorna_error(self):
+        turno = Turno(medico=self.medico, fecha_hora=self._fecha_futura())
+        errors = turno.validate()
+        self.assertIn("El paciente es obligatorio.", errors)
+
+    def test_validate_sin_fecha_retorna_error(self):
+        turno = Turno(medico=self.medico, paciente=self.paciente)
+        errors = turno.validate()
+        self.assertIn("La fecha y hora son obligatorias.", errors)
+
+    def test_validate_datos_completos_y_en_franja_retorna_lista_vacia(self):
+        turno = Turno(
+            medico=self.medico, paciente=self.paciente,
+            fecha_hora=self._fecha_futura(),
+        )
+        errors = turno.validate()
+        self.assertEqual(errors, [])
+
+    def test_validate_fuera_de_franja_horaria_retorna_error(self):
+        """El médico atiende 08-18; pedir turno a las 03:00 debe fallar."""
+        fecha_madrugada = self._fecha_futura(hour=3)
+        turno = Turno(
+            medico=self.medico, paciente=self.paciente,
+            fecha_hora=fecha_madrugada,
+        )
+        errors = turno.validate()
+        self.assertTrue(
+            any("no atiende a esa hora" in e for e in errors),
+            f"Se esperaba error de horario, pero se obtuvo: {errors}",
+        )
+
+    def test_validate_dia_sin_franja_retorna_error(self):
+        """Si eliminamos las franjas del domingo, un turno en domingo debe fallar."""
+        from app.models import FranjaHoraria
+
+        # Eliminamos la franja del domingo para este médico
+        FranjaHoraria.objects.filter(dia="DOM").delete()
+
+        # Buscamos el próximo domingo
+        fecha = timezone.now() + timedelta(days=1)
+        while fecha.weekday() != 6:  # 6 = domingo
+            fecha += timedelta(days=1)
+        fecha = fecha.replace(hour=10, minute=0, second=0, microsecond=0)
+
+        turno = Turno(medico=self.medico, paciente=self.paciente, fecha_hora=fecha)
+        errors = turno.validate()
+        self.assertTrue(
+            any("no atiende el día" in e for e in errors),
+            f"Se esperaba error de día, pero se obtuvo: {errors}",
+        )
+
+    def test_validate_medico_ausente_retorna_error(self):
+        """Si el médico tiene ausencia registrada en esa fecha, el turno no debe validar."""
+        fecha = self._fecha_futura(days=5)
+        Ausencia.objects.create(
+            medico=self.medico,
+            motivo="Congreso",
+            fecha_inicio=fecha.date(),
+            fecha_fin=fecha.date() + timedelta(days=1),
+        )
+        turno = Turno(medico=self.medico, paciente=self.paciente, fecha_hora=fecha)
+        errors = turno.validate()
+        self.assertIn("El médico se encuentra de licencia/ausente en esa fecha.", errors)
+
+    # ────────────────────────────────────────────
+    # new
+    # ────────────────────────────────────────────
+
+    def test_new_crea_turno_con_estado_pendiente(self):
+        fecha = self._fecha_futura()
         turno, errors = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
         self.assertEqual(errors, [])
+        self.assertIsNotNone(turno)
         self.assertEqual(turno.estado, "PENDIENTE")
+        self.assertTrue(Turno.objects.filter(pk=turno.pk).exists())
 
-    def test_update_modifica_datos_correctamente(self):
-        fecha = timezone.now() + timedelta(days=2)
-        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente, motivo="Viejo motivo")
+    def test_new_con_datos_invalidos_retorna_errores_y_no_persiste(self):
+        count_antes = Turno.objects.count()
+        turno, errors = Turno.new(motivo="Sin médico ni paciente")
+        self.assertIsNone(turno)
+        self.assertTrue(len(errors) > 0)
+        self.assertEqual(Turno.objects.count(), count_antes)
+
+    def test_new_crea_recordatorio_automatico(self):
+        """Al crear un turno, se debe generar un Recordatorio con asunto 'Turno Creado'."""
+        from app.models import Recordatorio
+
+        fecha = self._fecha_futura()
+        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
+        self.assertTrue(
+            Recordatorio.objects.filter(turno=turno, asunto="Turno Creado").exists(),
+        )
+
+    # ────────────────────────────────────────────
+    # update
+    # ────────────────────────────────────────────
+
+    def test_update_modifica_motivo_correctamente(self):
+        fecha = self._fecha_futura()
+        turno, _ = Turno.new(
+            fecha_hora=fecha, medico=self.medico,
+            paciente=self.paciente, motivo="Viejo motivo",
+        )
         errors = turno.update(motivo="Nuevo motivo")
         self.assertEqual(errors, [])
         turno.refresh_from_db()
         self.assertEqual(turno.motivo, "Nuevo motivo")
 
-    # --- Tests Métodos de Negocio ---
-    def test_esta_pendiente(self):
-        fecha = timezone.now() + timedelta(days=2)
+    def test_update_con_datos_invalidos_no_modifica(self):
+        fecha = self._fecha_futura()
+        turno, _ = Turno.new(
+            fecha_hora=fecha, medico=self.medico,
+            paciente=self.paciente, motivo="Motivo original",
+        )
+        # Intentamos borrar la fecha (inválido)
+        errors = turno.update(fecha_hora=None)
+        self.assertTrue(len(errors) > 0)
+        turno.refresh_from_db()
+        self.assertEqual(turno.motivo, "Motivo original")
+
+    # ────────────────────────────────────────────
+    # Métodos de negocio: esta_pendiente
+    # ────────────────────────────────────────────
+
+    def test_esta_pendiente_retorna_true_cuando_pendiente(self):
+        fecha = self._fecha_futura()
         turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
         self.assertTrue(turno.esta_pendiente())
 
-    def test_cancelar_turno_exitoso(self):
-        fecha = timezone.now() + timedelta(days=1)
+    def test_esta_pendiente_retorna_false_cuando_cancelado(self):
+        fecha = self._fecha_futura()
+        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
+        turno.cancelar()
+        self.assertFalse(turno.esta_pendiente())
+
+    # ────────────────────────────────────────────
+    # Métodos de negocio: cancelar
+    # ────────────────────────────────────────────
+
+    def test_cancelar_turno_futuro_exitoso(self):
+        fecha = self._fecha_futura(days=3)
         turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
         errors = turno.cancelar()
-        self.assertEqual(len(errors), 0)
+        self.assertEqual(errors, [])
+        turno.refresh_from_db()
         self.assertEqual(turno.estado, "CANCELADO")
 
-    def test_confirmar_turno_exitoso(self):
-        turno, _ = Turno.new(fecha_hora=timezone.now() + timedelta(days=1), medico=self.medico, paciente=self.paciente)
-        errores = turno.aceptar()
-        self.assertEqual(len(errores), 0)
+    def test_cancelar_turno_pasado_retorna_error(self):
+        """No se puede cancelar un turno cuya fecha ya pasó."""
+        fecha = self._fecha_futura()
+        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
+        # Forzamos la fecha al pasado directamente en la BD
+        Turno.objects.filter(pk=turno.pk).update(
+            fecha_hora=timezone.now() - timedelta(days=1),
+        )
+        turno.refresh_from_db()
+        errors = turno.cancelar()
+        self.assertTrue(len(errors) > 0)
+        self.assertIn("No se puede cancelar un turno que ya ha finalizado.", errors)
+
+    # ────────────────────────────────────────────
+    # Métodos de negocio: aceptar
+    # ────────────────────────────────────────────
+
+    def test_aceptar_turno_pendiente_exitoso(self):
+        fecha = self._fecha_futura()
+        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
+        errors = turno.aceptar()
+        self.assertEqual(errors, [])
+        turno.refresh_from_db()
         self.assertEqual(turno.estado, "ACEPTADO")
+
+    def test_aceptar_turno_no_pendiente_retorna_error(self):
+        """Un turno ya cancelado no debería poder aceptarse."""
+        fecha = self._fecha_futura()
+        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
+        turno.cancelar()
+        errors = turno.aceptar()
+        self.assertTrue(len(errors) > 0)
+        self.assertIn(
+            f"El turno no puede ser aceptado porque su estado actual es CANCELADO.",
+            errors,
+        )
+
+    def test_aceptar_genera_recordatorio_confirmado(self):
+        """Al aceptar, se debe generar un Recordatorio con asunto 'Turno Confirmado'."""
+        from app.models import Recordatorio
+
+        fecha = self._fecha_futura()
+        turno, _ = Turno.new(fecha_hora=fecha, medico=self.medico, paciente=self.paciente)
+        turno.aceptar()
+        self.assertTrue(
+            Recordatorio.objects.filter(turno=turno, asunto="Turno Confirmado").exists(),
+        )
 
 
 class PacienteModelTest(TestCase):
