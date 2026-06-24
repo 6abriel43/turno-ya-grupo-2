@@ -74,6 +74,37 @@ class TurnoForm(forms.ModelForm):
             if turno_ocupado:
                 raise forms.ValidationError(f"El Dr./a {medico.apellido} ya tiene un turno aceptado en este horario.")
 
+            # validación 3: franja horaria
+            mapeo_dias = {
+                0: "LUN", 1: "MAR", 2: "MIE",
+                3: "JUE", 4: "VIE", 5: "SAB", 6: "DOM"
+            }
+            dia_semana = mapeo_dias[fecha.weekday()]
+            hora_elegida = fecha.time()
+
+            franjas_del_dia = medico.franjas.filter(dia=dia_semana)
+            if not franjas_del_dia.exists():
+                raise forms.ValidationError(f"El médico no atiende el día {dia_semana}.")
+            else:
+                horario_valido = False
+                for franja in franjas_del_dia:
+                    if franja.hora_inicio <= hora_elegida <= franja.hora_fin:
+                        horario_valido = True
+                        break
+                if not horario_valido:
+                    raise forms.ValidationError(f"El médico no atiende a esa hora el día {dia_semana}.")
+
+            # validación 4: ausencia del médico
+            fecha_elegida = fecha.date()
+            medico_ausente = Ausencia.objects.filter(
+                medico=medico,
+                fecha_inicio__lte=fecha_elegida,
+                fecha_fin__gte=fecha_elegida
+            ).exists()
+
+            if medico_ausente:
+                raise forms.ValidationError("El médico se encuentra de licencia/ausente en esa fecha.")
+
         return cleaned_data
 
 

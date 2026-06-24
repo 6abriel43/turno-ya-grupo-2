@@ -9,6 +9,16 @@
     <li class="list-group-item"><strong>Obra Social:</strong> {{ medico.obra_social }}</li>
     <li class="list-group-item"><strong>Turnos totales:</strong> {{ medico.cantidad_turnos }}</li>
   </ul>
+  
+  <h4 class="mt-4">Horarios de Atención</h4> 
+  <ul class="list-group mb-3"> 
+    {% for franja in medico.franjas.all %}
+      <li class="list-group-item">{{ franja.get_dia_display }}: de {{ franja.hora_inicio }} a {{ franja.hora_fin }}</li> 
+    {% empty %} 
+      <li class="list-group-item">No hay horarios definidos.</li> 
+    {% endfor %} 
+  </ul> 
+
   <a href="{% url 'app:lista_medicos' %}" class="btn btn-secondary mt-3">Volver</a>
 </div>
 {% endblock %}

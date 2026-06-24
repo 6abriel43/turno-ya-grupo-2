@@ -270,8 +270,8 @@ class ReprogramacionSystemTest(TestCase):
         # Logueamos al médico para simular la petición de ausencia
         self.client.login(username=self.user_med.username, password="123")
         
-        # El médico registra ausencia para mañana 
-        fecha_ausencia = date.today() + timedelta(days=1)
+        # El médico registra ausencia para el mismo día del turno
+        fecha_ausencia = self.fecha_turno.date()
         url = reverse('app:crear_ausencia')
         data = {
             'motivo': 'Congreso de Sistemas',

@@ -252,14 +252,15 @@ class AusenciaCreateView(LoginRequiredMixin, CreateView):
         
         #REPROGRAMACIÓN AUTOMÁTICA 
         #Buscamos turnos del médico que caigan en ese rango de fechas
-        inicio_dt = datetime.combine(self.object.fecha_inicio, time.min)
-        fin_dt = datetime.combine(self.object.fecha_fin, time.max)
+        from django.utils import timezone
+        inicio_dt = timezone.make_aware(datetime.combine(self.object.fecha_inicio, time.min))
+        fin_dt = timezone.make_aware(datetime.combine(self.object.fecha_fin, time.max))
         
         turnos_afectados = Turno.objects.filter(
             medico=self.object.medico,
             fecha_hora__range=(inicio_dt, fin_dt)
         ).exclude(estado='CANCELADO')
-        
+        print("DEBUG:", inicio_dt, fin_dt, turnos_afectados)
         for turno in turnos_afectados:
             turno.estado = 'REPROGRAMACION_PENDIENTE'
             # Propuesta automatizada base: Se mueve el turno exactamente 1 semana más adelante
