@@ -11,10 +11,12 @@
       <p class="page-subtitle">Listado de pacientes registrados en la clinica.</p>
     </div>
   </div>
-  <a href="#" class="btn btn-primary-app px-4">
-    {% include "includes/iconos.html" with icono="mas" %}
-    <span>Nuevo Paciente</span>
-  </a>
+  {% if user.is_superuser or user.is_staff %}
+    <a href="{% url 'admin:app_paciente_add' %}" class="btn btn-primary-app px-4">
+      {% include "includes/iconos.html" with icono="mas" %}
+      <span>Nuevo Paciente</span>
+    </a>
+  {% endif %}
 </section>
 
 <section class="app-card">
