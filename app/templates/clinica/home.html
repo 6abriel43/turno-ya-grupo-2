@@ -90,6 +90,7 @@
   </div>
 </section>
 
+{% if user.is_superuser or user.is_staff or user.medico %}
 <section class="row g-4">
   <div class="col-12 col-lg-6">
     <div class="app-card h-100">
@@ -127,4 +128,5 @@
     </div>
   </div>
 </section>
+{% endif %}
 {% endblock %}

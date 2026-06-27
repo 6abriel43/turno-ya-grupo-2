@@ -212,6 +212,23 @@ body.app-body {
   border-top: 1px solid var(--app-border);
 }
 
+.detail-list {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.45fr) 1fr;
+  gap: 0.85rem 1rem;
+}
+
+.detail-list dt {
+  color: var(--app-muted);
+  font-weight: 800;
+}
+
+.detail-list dd {
+  margin: 0;
+  color: var(--app-text);
+  font-weight: 650;
+}
+
 .table-card .table {
   margin-bottom: 0;
 }
