@@ -57,11 +57,15 @@
               <div class="empty-state">
                 <div class="empty-icon">{% include "includes/iconos.html" with icono="turnos" %}</div>
                 <p class="empty-title mb-1">No hay turnos registrados en el sistema.</p>
-                <p class="mb-4">Comienza creando un nuevo turno para tus pacientes.</p>
-                <a href="{% url 'app:crear_turno' %}" class="btn btn-outline-app">
-                  {% include "includes/iconos.html" with icono="mas" %}
-                  <span>Crear Primer Turno</span>
-                </a>
+                {% if user.is_authenticated and user.paciente %}
+                  <p class="mb-4">Comienza solicitando un nuevo turno.</p>
+                  <a href="{% url 'app:crear_turno' %}" class="btn btn-outline-app">
+                    {% include "includes/iconos.html" with icono="mas" %}
+                    <span>Crear primer turno</span>
+                  </a>
+                {% else %}
+                  <p class="mb-0">Cuando haya turnos asignados, apareceran aca.</p>
+                {% endif %}
               </div>
             </td>
           </tr>

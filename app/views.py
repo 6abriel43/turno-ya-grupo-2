@@ -5,12 +5,11 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
-from .models import Medico, Turno, Paciente
+from .models import Medico, Turno, Paciente, Especialidad, ObraSocial, Ausencia, Recordatorio
 from django.utils import timezone
 from .forms import TurnoForm, RegistroPacienteForm, PerfilMedicoForm, PerfilPacienteForm
 from django.db.models import Q
 from django.contrib import messages
-from app.models import Ausencia, Turno, Recordatorio
 from app.forms import AusenciaForm
 from datetime import datetime, time, timedelta
 
@@ -83,7 +82,7 @@ class ListaMedicosView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         """Permite filtrar por especialidad y obra social."""
-        queryset = super().get_queryset()
+        queryset = Medico.objects.select_related("especialidad", "obra_social").order_by("apellido", "nombre")
         especialidad = self.request.GET.get('especialidad')
         obra_social = self.request.GET.get('obra_social')
 
@@ -97,10 +96,8 @@ class ListaMedicosView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         """Agrega al contexto las listas de especialidades y obras sociales para los filtros."""
         context = super().get_context_data(**kwargs)
-        from .models import Especialidad, ObraSocial
-        
-        context['especialidades'] = Especialidad.objects.all()
-        context['obras_sociales'] = ObraSocial.objects.all()
+        context['especialidades'] = Especialidad.objects.all().order_by("nombre")
+        context['obras_sociales'] = ObraSocial.objects.all().order_by("nombre")
         context['especialidad_seleccionada'] = self.request.GET.get("especialidad", "")
         context['obra_social_seleccionada'] = self.request.GET.get("obra_social", "")
         return context
@@ -120,6 +117,14 @@ class DetalleMedicoView(LoginRequiredMixin, DetailView):
     model = Medico
     template_name = "clinica/detalle_medico.html"
     context_object_name = "medico"
+
+    def get_queryset(self):
+        return Medico.objects.select_related("especialidad", "obra_social").prefetch_related("franjas", "ausencias")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["ausencias"] = self.object.ausencias.all().order_by("-fecha_inicio")
+        return context
 
 class ListaPacientesView(LoginRequiredMixin, MedicoRequiredMixin, ListView):
     """Lista todos los pacientes."""
@@ -203,11 +208,10 @@ class ListaTurnosView(LoginRequiredMixin, MedicoRequiredMixin, ListView):
     context_object_name = "turnos"
 
     def get_queryset(self):
+        queryset = Turno.objects.select_related('medico', 'paciente').order_by('-fecha_hora')
         if self.request.user.is_superuser:
-            return Turno.objects.select_related('medico', 'paciente').order_by('-fecha_hora')
-        return Turno.objects.filter(
-            medico=self.request.user.medico
-        ).order_by('-fecha_hora')   
+            return queryset
+        return queryset.filter(medico=self.request.user.medico)   
 
 class MisTurnosView(LoginRequiredMixin, PacienteRequiredMixin, ListView):
     model = Turno
@@ -255,21 +259,31 @@ class CancelarTurnoView(LoginRequiredMixin, PacienteRequiredMixin, View):
         return redirect("app:home")
 
 '''VISTAS AUSENCIA + RECORDATORIO'''
-class AusenciaListView(LoginRequiredMixin, ListView):
+class AusenciaListView(LoginRequiredMixin, MedicoRequiredMixin, ListView):
     """Vista para listar el historial de ausencias del personal médico."""
-    from .models import Ausencia
     model = Ausencia
     template_name = "clinica/ausencias_list.html"
     context_object_name = "lista_ausencias"
     ordering = ['-fecha_inicio']
 
-class RecordatorioListView(LoginRequiredMixin, ListView):
+    def get_queryset(self):
+        queryset = Ausencia.objects.select_related("medico").order_by("-fecha_inicio")
+        if self.request.user.is_superuser:
+            return queryset
+        return queryset.filter(medico=self.request.user.medico)
+
+class RecordatorioListView(LoginRequiredMixin, MedicoRequiredMixin, ListView):
     """Vista para el panel de control y seguimiento de recordatorios."""
-    from .models import Recordatorio
     model = Recordatorio
     template_name = "clinica/recordatorios_list.html"
     context_object_name = "lista_recordatorios"
     ordering = ['-fecha_envio']
+
+    def get_queryset(self):
+        queryset = Recordatorio.objects.select_related("turno", "turno__paciente", "turno__medico").order_by("-fecha_envio")
+        if self.request.user.is_superuser:
+            return queryset
+        return queryset.filter(turno__medico=self.request.user.medico)
 
 class RegistroUsuarioView(CreateView):
     """Vista basada en clase para el alta de nuevos usuarios en el sistema."""
@@ -324,7 +338,6 @@ class AusenciaCreateView(LoginRequiredMixin, MedicoRequiredMixin, CreateView):
             medico=self.object.medico,
             fecha_hora__range=(inicio_dt, fin_dt)
         ).exclude(estado='CANCELADO')
-        print("DEBUG:", inicio_dt, fin_dt, turnos_afectados)
         for turno in turnos_afectados:
             turno.estado = 'REPROGRAMACION_PENDIENTE'
             # Propuesta automatizada base: Se mueve el turno exactamente 1 semana más adelante

@@ -7,7 +7,7 @@
             <h1 class="fw-bold text-dark h3">🔔 Panel de Recordatorios Enviados</h1>
             <p class="text-muted small">Seguimiento de alertas y comunicaciones a pacientes.</p>
         </div>
-        <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm">Volver al Home</a>
+        <a href="{% url 'app:home' %}" class="btn btn-outline-secondary btn-sm">Volver al Home</a>
     </div>
 
     <div class="row g-3">
@@ -34,7 +34,7 @@
                         </form>
                     {% endif %}
                     <div class="border-top pt-2 mt-2 bg-light p-2 rounded-2">
-                        <span class="d-block small text-muted"><strong>Vía:</strong> {{ recordatorio.get_medio_display }}</span>
+                        <span class="d-block small text-muted"><strong>Tipo:</strong> {{ recordatorio.tipo }}</span>
                     </div>
                 </div>
             </div>
