@@ -29,18 +29,74 @@
             </a>
           </li>
           {% if user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link {% if request.resolver_match.url_name == 'lista_pacientes' or request.resolver_match.url_name == 'historial_paciente' %}active{% endif %}" href="{% url 'app:lista_pacientes' %}">
-                {% include "includes/iconos.html" with icono="pacientes" %}
-                <span>Pacientes</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {% if request.resolver_match.url_name == 'lista_turnos' or request.resolver_match.url_name == 'crear_turno' %}active{% endif %}" href="{% url 'app:lista_turnos' %}">
-                {% include "includes/iconos.html" with icono="turnos" %}
-                <span>Turnos</span>
-              </a>
-            </li>
+            {% if user.is_superuser or user.is_staff %}
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'lista_pacientes' or request.resolver_match.url_name == 'historial_paciente' %}active{% endif %}"
+                  href="{% url 'app:lista_pacientes' %}">
+                  {% include "includes/iconos.html" with icono="pacientes" %}
+                  <span>Pacientes</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'lista_turnos' or request.resolver_match.url_name == 'crear_turno' %}active{% endif %}"
+                  href="{% url 'app:lista_turnos' %}">
+                  {% include "includes/iconos.html" with icono="turnos" %}
+                  <span>Turnos</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'lista_ausencias' %}active{% endif %}"
+                  href="{% url 'app:lista_ausencias' %}">
+                  {% include "includes/iconos.html" with icono="ausencias" %}
+                  <span>Ausencias</span>
+                </a>
+              </li>
+            {% elif user.medico %}
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'lista_pacientes' or request.resolver_match.url_name == 'historial_paciente' %}active{% endif %}"
+                  href="{% url 'app:lista_pacientes' %}">
+                  {% include "includes/iconos.html" with icono="pacientes" %}
+                  <span>Pacientes</span>
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'lista_turnos' or request.resolver_match.url_name == 'crear_turno' %}active{% endif %}"
+                  href="{% url 'app:lista_turnos' %}">
+                  {% include "includes/iconos.html" with icono="turnos" %}
+                  <span>Turnos</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'lista_ausencias' %}active{% endif %}"
+                  href="{% url 'app:lista_ausencias' %}">
+                  {% include "includes/iconos.html" with icono="ausencias" %}
+                  <span>Ausencias</span>
+                </a>
+              </li>
+            {% elif user.paciente %}
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'crear_turno' %}active{% endif %}"
+                  href="{% url 'app:crear_turno' %}">
+                  {% include "includes/iconos.html" with icono="turnos" %}
+                  <span>Solicitar turno</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'mis_turnos' %}active{% endif %}"
+                  href="{% url 'app:mis_turnos' %}">
+                  {% include "includes/iconos.html" with icono="turnos" %}
+                  <span>Mis turnos</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'mis_recordatorios' %}active{% endif %}"
+                  href="{% url 'app:mis_recordatorios' %}">
+                  {% include "includes/iconos.html" with icono="recordatorios" %}
+                  <span>Mis recordatorios</span>
+                </a>
+              </li>
+            {% endif %}
           {% endif %}
         </ul>
 

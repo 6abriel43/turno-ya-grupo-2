@@ -1,0 +1,193 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$3Yi6Xw1VGzGZoAC6wNOPgy$f8xvSfe8Jz5siS5festf6JxjnKDufYSRIywuxMC20o0=",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "Admin",
+      "last_name": "Sistema",
+      "email": "admin@turnoya.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$rgJpMrlFM98WkaWyLnZDXx$ZG0c0oI8ZkpaaE/vLT+ROLbDiHUUvKtDx9I36k6+6lU=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "medico1",
+      "first_name": "Laura",
+      "last_name": "Romero",
+      "email": "laura@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$2B36vgOEcW38wUYAAJp8tj$nh4F0GbgS9AcmZwUcgAeVXqVpmn+QC6pEGl07gb2U/Q=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "paciente1",
+      "first_name": "Carlos",
+      "last_name": "Pérez",
+      "email": "carlos@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "app.especialidad",
+    "pk": 1,
+    "fields": {
+      "nombre": "Pediatría",
+      "descripcion": "Especialidad para niños y adolescentes"
+    }
+  },
+  {
+    "model": "app.especialidad",
+    "pk": 2,
+    "fields": {
+      "nombre": "Cardiología",
+      "descripcion": "Especialidad en enfermedades del corazón"
+    }
+  },
+  {
+    "model": "app.especialidad",
+    "pk": 3,
+    "fields": {
+      "nombre": "Clínica Médica",
+      "descripcion": "Atención general y diagnóstico"
+    }
+  },
+  {
+    "model": "app.obrasocial",
+    "pk": 1,
+    "fields": {
+      "nombre": "OSDE",
+      "sigla": "OSDE"
+    }
+  },
+  {
+    "model": "app.obrasocial",
+    "pk": 2,
+    "fields": {
+      "nombre": "PAMI",
+      "sigla": "PAMI"
+    }
+  },
+  {
+    "model": "app.obrasocial",
+    "pk": 3,
+    "fields": {
+      "nombre": "Swiss Medical",
+      "sigla": "SWM"
+    }
+  },
+  {
+    "model": "app.medico",
+    "pk": 1,
+    "fields": {
+      "usuario": 2,
+      "nombre": "Laura",
+      "apellido": "Romero",
+      "matricula": "MP-1001",
+      "especialidad": 1,
+      "obra_social": 1
+    }
+  },
+  {
+    "model": "app.franjahoraria",
+    "pk": 1,
+    "fields": {
+      "dia": "LUN",
+      "hora_inicio": "08:00:00",
+      "hora_fin": "20:00:00",
+      "medicos": [1]
+    }
+  },
+  {
+    "model": "app.franjahoraria",
+    "pk": 2,
+    "fields": {
+      "dia": "MAR",
+      "hora_inicio": "08:00:00",
+      "hora_fin": "20:00:00",
+      "medicos": [1]
+    }
+  },
+  {
+    "model": "app.franjahoraria",
+    "pk": 3,
+    "fields": {
+      "dia": "MIE",
+      "hora_inicio": "08:00:00",
+      "hora_fin": "20:00:00",
+      "medicos": [1]
+    }
+  },
+  {
+    "model": "app.franjahoraria",
+    "pk": 4,
+    "fields": {
+      "dia": "JUE",
+      "hora_inicio": "08:00:00",
+      "hora_fin": "20:00:00",
+      "medicos": [1]
+    }
+  },
+  {
+    "model": "app.franjahoraria",
+    "pk": 5,
+    "fields": {
+      "dia": "VIE",
+      "hora_inicio": "08:00:00",
+      "hora_fin": "20:00:00",
+      "medicos": [1]
+    }
+  },
+  {
+    "model": "app.franjahoraria",
+    "pk": 6,
+    "fields": {
+      "dia": "SAB",
+      "hora_inicio": "08:00:00",
+      "hora_fin": "20:00:00",
+      "medicos": [1]
+    }
+  },
+  {
+    "model": "app.franjahoraria",
+    "pk": 7,
+    "fields": {
+      "dia": "DOM",
+      "hora_inicio": "08:00:00",
+      "hora_fin": "20:00:00",
+      "medicos": [1]
+    }
+  },
+  {
+    "model": "app.paciente",
+    "pk": 1,
+    "fields": {
+      "usuario": 3,
+      "nombre": "Carlos",
+      "apellido": "Pérez",
+      "dni": "30111222",
+      "email": "carlos@turnoya.com",
+      "telefono": "1122334455",
+      "obra_social": 2
+    }
+  }
+]

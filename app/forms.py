@@ -1,13 +1,11 @@
 from datetime import timedelta
 
 from django import forms
-from app.models import Ausencia
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Turno ,Paciente, ObraSocial, Medico
-
-
+from .models import Turno ,Paciente, ObraSocial, Medico, Ausencia
 
 class AusenciaForm(forms.ModelForm):
     class Meta:
@@ -21,24 +19,29 @@ class AusenciaForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        fecha_inicio = cleaned_data.get('fecha_inicio')
-        fecha_fin = cleaned_data.get('fecha_fin')
+        inicio = cleaned_data.get('fecha_inicio')
+        fin = cleaned_data.get('fecha_fin')
 
-        if fecha_inicio and fecha_fin:
-            if fecha_fin < fecha_inicio:
-                raise forms.ValidationError("La fecha de finalización no puede ser anterior a la fecha de inicio.")
+        # VALIDACIÓN 1: La fecha de fin no puede ser menor a la de inicio
+        if inicio and fin and fin < inicio:
+            raise ValidationError("La fecha de finalización no puede ser anterior a la de inicio.")
         return cleaned_data
 
 class TurnoForm(forms.ModelForm):
     class Meta:
         model = Turno
-        fields = ["medico", "paciente", "fecha_hora", "motivo"]
+        fields = ["medico", "fecha_hora", "motivo"]
         widgets = {
             "fecha_hora": forms.DateTimeInput(attrs={"type": "datetime-local", "class": "form-control"}),
             "medico": forms.Select(attrs={"class": "form-select"}),
-            "paciente": forms.Select(attrs={"class": "form-select"}),
             "motivo": forms.TextInput(attrs={"class": "form-control"}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop("request", None)
+        super().__init__(*args, **kwargs)
+        if self.request and hasattr(self.request.user, "paciente"):
+            self.fields.pop("paciente", None)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -59,20 +62,22 @@ class TurnoForm(forms.ModelForm):
                 medico=medico,
                 fecha_hora__gte=inicio_minuto,
                 fecha_hora__lt=fin_minuto,
-                estado="ACEPTADO",
+                estado__in=['ACEPTADO', 'CONFIRMADO'],
             ).exists()
 
             if not turno_ocupado and fecha_formulario:
                 turno_ocupado = Turno.objects.filter(
                     medico=medico,
-                    estado="ACEPTADO",
+                    estado__in=['ACEPTADO', 'CONFIRMADO'],
                 ).extra(
                     where=["strftime('%%Y-%%m-%%dT%%H:%%M', fecha_hora) = %s"],
                     params=[fecha_formulario],
                 ).exists()
 
             if turno_ocupado:
-                raise forms.ValidationError(f"El Dr./a {medico.apellido} ya tiene un turno aceptado en este horario.")
+                raise forms.ValidationError(
+                    f"El Dr./a {medico.apellido} ya tiene un turno aceptado en este horario."
+                )
 
             # validación 3: franja horaria
             mapeo_dias = {
@@ -107,7 +112,6 @@ class TurnoForm(forms.ModelForm):
 
         return cleaned_data
 
-
 class RegistroPacienteForm(UserCreationForm):
     nombre = forms.CharField(max_length=100, required=True, label="Nombre")
     apellido = forms.CharField(max_length=100, required=True, label="Apellido")
@@ -133,10 +137,10 @@ class RegistroPacienteForm(UserCreationForm):
         user.email = self.cleaned_data['email']
         
         if commit:
-            user.save() # Guardamos el User real en la base de datos para generar su ID
+            user.save() #Guardamos el user real en la base de datos para generar su ID
             
-            # 2. Creamos AUTOMÁTICAMENTE el Paciente usando el método .new() 
-            # Pasamos todos los datos requeridos por su validador interno
+            #2.Creamos automaticamente el Paciente usando el método .new() 
+            #Pasamos todos los datos requeridos por su validador interno
             Paciente.new(
                 usuario=user,
                 nombre=self.cleaned_data['nombre'],
@@ -157,7 +161,6 @@ class PerfilMedicoForm(forms.ModelForm):
             'obra_social': forms.Select(attrs={'class': 'form-select'}),
             'especialidad': forms.Select(attrs={'class': 'form-select'}),
         }
-
 
 class PerfilPacienteForm(forms.ModelForm):
     # Agregamos el campo email de forma manual porque vive en la tabla User, no en Paciente

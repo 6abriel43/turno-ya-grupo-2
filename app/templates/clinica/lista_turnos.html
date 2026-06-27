@@ -5,13 +5,15 @@
 {% block content %}
 <section class="page-header">
   <div>
-    <h1 class="page-title">Listado de Turnos</h1>
-    <p class="page-subtitle">Gestiona y visualiza todos los turnos registrados en el sistema.</p>
+    <h1 class="page-title">{{ titulo|default:'Listado de Turnos' }}</h1>
+    <p class="page-subtitle">{{ subtitulo|default:'Gestiona y visualiza todos los turnos registrados en el sistema.' }}</p>
   </div>
+  {% if user.is_authenticated and user.paciente %}
   <a href="{% url 'app:crear_turno' %}" class="btn btn-primary-app px-4">
     {% include "includes/iconos.html" with icono="mas" %}
     <span>Nuevo Turno</span>
   </a>
+  {% endif %}
 </section>
 
 <section class="table-card">
@@ -34,6 +36,12 @@
             <td>
               {% if turno.esta_pendiente %}
                 <span class="badge badge-soft text-bg-warning">Pendiente</span>
+                {% if user.is_authenticated and user.medico %}
+                  <form method="post" action="{% url 'app:aceptar_turno' turno.pk %}" class="d-inline mt-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-success">Aceptar</button>
+                  </form>
+                {% endif %}
               {% elif turno.estado == 'CONFIRMADO' or turno.estado == 'ACEPTADO' %}
                 <span class="badge badge-soft text-bg-success">{{ turno.estado|title }}</span>
               {% elif turno.estado == 'FINALIZADO' %}

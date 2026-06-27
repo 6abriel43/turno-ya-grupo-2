@@ -15,16 +15,33 @@ from app.forms import AusenciaForm
 from datetime import datetime, time, timedelta
 
 
-class MedicoRequiredMixin(UserPassesTestMixin):
+class RolRequiredMixin(UserPassesTestMixin):
+    """Permite el acceso a médicos, pacientes o superusuarios según el rol configurado."""
+    allowed_roles = ()
+
     def test_func(self):
-        # solo los usuarios medicos pueden entrar
-        return hasattr(self.request.user, "medico")
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        if user.is_superuser or user.is_staff:
+            return True
+        if "medico" in self.allowed_roles and hasattr(user, "medico"):
+            return True
+        if "paciente" in self.allowed_roles and hasattr(user, "paciente"):
+            return True
+        return False
 
     def handle_no_permission(self):
         if self.request.user.is_authenticated:
             raise PermissionDenied
         return super().handle_no_permission()
 
+
+class MedicoRequiredMixin(RolRequiredMixin):
+    allowed_roles = ("medico",)
+
+class PacienteRequiredMixin(RolRequiredMixin):
+    allowed_roles = ("paciente",)
 
 class HomeView(LoginRequiredMixin, TemplateView):
     """Vista de inicio de la clínica potenciada con las estadísticas de tu Manager."""
@@ -37,10 +54,6 @@ class HomeView(LoginRequiredMixin, TemplateView):
         context['total_pacientes'] = Paciente.objects.count()
         context['total_turnos'] = Turno.objects.count()
 
-
-        # Importación local para evitar importes circulares entre archivos
-        from .models import Turno 
-        
         try:
             context['metrics'] = Turno.analitica.obtener_panel_home()
         except AttributeError:
@@ -85,8 +98,11 @@ class ListaMedicosView(LoginRequiredMixin, ListView):
         """Agrega al contexto las listas de especialidades y obras sociales para los filtros."""
         context = super().get_context_data(**kwargs)
         from .models import Especialidad, ObraSocial
+        
         context['especialidades'] = Especialidad.objects.all()
         context['obras_sociales'] = ObraSocial.objects.all()
+        context['especialidad_seleccionada'] = self.request.GET.get("especialidad", "")
+        context['obra_social_seleccionada'] = self.request.GET.get("obra_social", "")
         return context
     
 
@@ -105,7 +121,7 @@ class DetalleMedicoView(LoginRequiredMixin, DetailView):
     template_name = "clinica/detalle_medico.html"
     context_object_name = "medico"
 
-class ListaPacientesView(LoginRequiredMixin, ListView):
+class ListaPacientesView(LoginRequiredMixin, MedicoRequiredMixin, ListView):
     """Lista todos los pacientes."""
 
     model = Paciente
@@ -132,11 +148,13 @@ class HistorialPacienteListView(LoginRequiredMixin, MedicoRequiredMixin, ListVie
 
     def get_queryset(self):
         paciente_id = self.kwargs["paciente_id"]
-        return Turno.objects.select_related("paciente", "medico").filter(
+        queryset = Turno.objects.select_related("paciente", "medico").filter(
             paciente_id=paciente_id,
-            medico=self.request.user.medico,
             estado__in=["ACEPTADO", "CONFIRMADO", "FINALIZADO"],
-        ).order_by("-fecha_hora")
+        )
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(medico=self.request.user.medico)
+        return queryset.order_by("-fecha_hora")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -150,48 +168,91 @@ class ObservacionUpdateView(LoginRequiredMixin, MedicoRequiredMixin, UpdateView)
     template_name = "clinica/observacion_form.html"
 
     def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Turno.objects.all()
         return Turno.objects.filter(medico=self.request.user.medico)
 
     def get_success_url(self):
         return reverse("app:historial_paciente", kwargs={"paciente_id": self.object.paciente_id})
 
 
-class TurnoCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class TurnoCreateView(LoginRequiredMixin, PacienteRequiredMixin, CreateView):
     model = Turno
     form_class = TurnoForm
     template_name = 'clinica/turno_form.html'
-    success_url = reverse_lazy('app:lista_turnos') 
+    success_url = reverse_lazy('app:mis_turnos') 
 
-    def test_func(self):
-        #Verifica en tiempo real que el usuario logueado sea un Paciente.
-        return hasattr(self.request.user, 'paciente')
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.instance.paciente = self.request.user.paciente
+        return form
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
 
     def form_valid(self, form):
         #asignamos automaticamente quien creo el turno
-        form.instance.creado_por = self.request.user
+        form.instance.paciente = self.request.user.paciente
         return super().form_valid(form)
 
-class ListaTurnosView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class ListaTurnosView(LoginRequiredMixin, MedicoRequiredMixin, ListView):
     model = Turno
     template_name = "clinica/lista_turnos.html"
     context_object_name = "turnos"
 
-    def test_func(self):
-        #Verifica en tiempo real que el usuario logueado sea un Médico."""
-        return hasattr(self.request.user, 'medico')
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Turno.objects.select_related('medico', 'paciente').order_by('-fecha_hora')
+        return Turno.objects.filter(
+            medico=self.request.user.medico
+        ).order_by('-fecha_hora')   
+
+class MisTurnosView(LoginRequiredMixin, PacienteRequiredMixin, ListView):
+    model = Turno
+    template_name = "clinica/lista_turnos.html"
+    context_object_name = "turnos"
 
     def get_queryset(self):
-        # Ordenamos los turnos mostrando los más recientes primero
-        return Turno.objects.all().order_by('-fecha_hora')   
+        return Turno.objects.filter(paciente=self.request.user.paciente).order_by('-fecha_hora')
 
-class CancelarTurnoView(LoginRequiredMixin, View):
-    """Cancela un turno dado su pk mediante POST."""
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Mis turnos'
+        context['subtitulo'] = 'Aquí verás los turnos que solicitaste.'
+        return context
+
+class AceptarTurnoView(LoginRequiredMixin, MedicoRequiredMixin, View):
+    """Acepta un turno pendiente desde la vista del médico."""
 
     def post(self, request, pk):
         turno = get_object_or_404(Turno, pk=pk)
-        turno.cancelar()
-        return redirect('app:lista_turnos')
+        if not request.user.is_superuser and turno.medico != request.user.medico:
+            raise PermissionDenied
 
+        errors = turno.aceptar()
+        if errors:
+            messages.error(request, errors[0])
+        else:
+            messages.success(request, "Turno aceptado correctamente.")
+
+        return redirect("app:lista_turnos")
+
+
+class CancelarTurnoView(LoginRequiredMixin, PacienteRequiredMixin, View):
+    """Cancela un turno dado su pk mediante POST."""
+
+    def post(self, request, pk):
+        turno = get_object_or_404(Turno, pk=pk, paciente__usuario=request.user)
+        errors = turno.cancelar()
+
+        if errors:
+            messages.error(request, errors[0])
+            return redirect("app:home")
+
+        messages.success(request, "Turno cancelado correctamente.")
+        return redirect("app:home")
 
 '''VISTAS AUSENCIA + RECORDATORIO'''
 class AusenciaListView(LoginRequiredMixin, ListView):
@@ -234,20 +295,23 @@ class PerfilUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         """Retorna el objeto (Medico o Paciente) que corresponde al usuario actual."""
+        if self.request.user.is_superuser:
+            raise PermissionDenied
         if hasattr(self.request.user, 'medico'):
             return self.request.user.medico
-        # Si no es médico, asumimos que es paciente (o tirará error si es admin puro)
         return self.request.user.paciente
     
-class AusenciaCreateView(LoginRequiredMixin, CreateView):
+class AusenciaCreateView(LoginRequiredMixin, MedicoRequiredMixin, CreateView):
     model = Ausencia
     form_class = AusenciaForm
     template_name = 'clinica/ausencia_form.html'
     success_url = reverse_lazy('app:home')
 
     def form_valid(self, form):
-        # Asignamos al médico logueado(Se asume la relación OneToOne con User)
-        form.instance.medico = self.request.user.medico
+        if not hasattr(self.request.user, 'medico') and not self.request.user.is_superuser:
+            raise PermissionDenied
+        if hasattr(self.request.user, 'medico'):
+            form.instance.medico = self.request.user.medico
         response = super().form_valid(form)
         
         #REPROGRAMACIÓN AUTOMÁTICA 
@@ -287,7 +351,9 @@ class MarcarRecordatorioLeidoView(LoginRequiredMixin, View):
         recordatorio.marcar_como_leido()
         return redirect('app:mis_recordatorios')
 
-class ProcesarReprogramacionView(LoginRequiredMixin, View):
+class ProcesarReprogramacionView(LoginRequiredMixin, PacienteRequiredMixin, View):
+    """Maneja la aceptación/rechazo de reprogramaciones de turnos."""
+
     def post(self, request, pk):
         turno = get_object_or_404(Turno, pk=pk, paciente__usuario=request.user)
         accion = request.POST.get('accion')
@@ -297,11 +363,41 @@ class ProcesarReprogramacionView(LoginRequiredMixin, View):
             turno.nueva_fecha_hora = None
             turno.estado = 'CONFIRMADO'
             turno.save()
-            messages.success(request, "Ha aceptado la reprogramación del turno con éxito.")
+
+            Recordatorio.new(
+                turno=turno,
+                fecha_envio=timezone.now(),
+                tipo="SISTEMA",
+                asunto="Reprogramación Aceptada",
+                mensaje=f"Tu turno ha sido reprogramado para el {turno.fecha_hora.strftime('%d/%m/%Y %H:%M')} hs.",
+                usuarios=[request.user]
+            )
+
+            messages.success(
+                request,
+                f"Ha aceptado la reprogramación del turno con éxito para {turno.fecha_hora.strftime('%d/%m/%Y %H:%M')}."
+            )
+
         elif accion == 'rechazar':
-            turno.estado = 'CANCELADO'
             turno.nueva_fecha_hora = None
+            turno.estado = 'CANCELADO'
             turno.save()
-            messages.warning(request, "Ha rechazado la propuesta. El turno fue cancelado.")
             
-        return redirect('app:home')
+            Recordatorio.new(
+                turno=turno,
+                fecha_envio=timezone.now(),
+                tipo="SISTEMA",
+                asunto="Reprogramación Rechazada",
+                mensaje=f"El paciente rechazó la reprogramación. Se mantiene el turno original: {turno.fecha_hora.strftime('%d/%m/%Y %H:%M')}",
+                usuarios=[turno.medico.usuario]
+            )
+
+            messages.info(
+                request,
+                "Ha rechazado la reprogramación. Se mantiene tu turno original."
+            )
+
+        else:
+            messages.error(request, "Acción no válida o turno sin reprogramación pendiente.")
+
+        return redirect("app:home")

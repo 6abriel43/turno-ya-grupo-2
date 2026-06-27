@@ -148,6 +148,24 @@ class TurnoCreateViewTest(TestCase):
             f"El Dr./a {self.medico.apellido} ya tiene un turno aceptado en este horario."
         )
 
+    def test_paciente_no_debe_elegir_paciente_al_crear_turno(self):
+        self.client.login(username='pacuser', password='password')
+
+        response = self.client.get(reverse('app:crear_turno'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('paciente', response.context['form'].fields)
+
+        data = {
+            'medico': self.medico.id,
+            'fecha_hora': (timezone.now() + timedelta(days=2)).strftime('%Y-%m-%dT%H:%M'),
+            'motivo': 'Consulta general'
+        }
+        response = self.client.post(reverse('app:crear_turno'), data)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Turno.objects.count(), 1)
+
 
 class ClinicaSeguridadTests(TestCase):
 
@@ -205,14 +223,22 @@ class ClinicaSeguridadTests(TestCase):
 
     def test_paciente_no_puede_ver_lista_turnos_medico(self):
         """Prueba que un Paciente sea REBOTADO (403) al intentar entrar a la lista de turnos de médicos."""
-        # Logueamos al paciente de prueba
         self.client.login(username="paciente_test", password="password123")
-        
-        # Intentamos ir a la lista de turnos reservada para médicos
         response = self.client.get(reverse('app:lista_turnos'))
-        
-        # Verificamos que el candado UserPassesTestMixin lo frene con un 403 (Prohibido)
         self.assertEqual(response.status_code, 403)
+
+    def test_paciente_no_puede_ver_lista_pacientes(self):
+        """Un paciente no debería poder ver la lista completa de pacientes."""
+        self.client.login(username="paciente_test", password="password123")
+        response = self.client.get(reverse('app:lista_pacientes'))
+        self.assertEqual(response.status_code, 403)
+
+    def test_admin_puede_ver_vistas_medicas(self):
+        """Un superusuario debe poder entrar a las vistas de gestión médica sin quedar bloqueado por 403."""
+        admin = User.objects.create_superuser(username="admin_seguro", password="password123")
+        self.client.login(username="admin_seguro", password="password123")
+        response = self.client.get(reverse('app:lista_turnos'))
+        self.assertEqual(response.status_code, 200)
 
     def test_auto_generacion_recordatorio_al_crear_turno(self):
         """Verifica que al instanciar un nuevo turno se genere el recordatorio automáticamente."""
