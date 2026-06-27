@@ -24,7 +24,6 @@ class Medico(models.Model):
     def __str__(self) -> str:
         return f"Dr/a. {self.apellido}, {self.nombre}"
 
-
     def nombre_completo(self) -> str:
         return f"{self.nombre} {self.apellido}"
 
@@ -204,7 +203,6 @@ class FranjaHoraria(models.Model):
         return minutos_fin - minutos_inicio
 
 
-'''---'''
 class EstadisticasClinicaQuerySet(models.QuerySet):
     def metricas_del_dia(self) -> dict:
         """Calcula en el servidor las estadísticas requeridas para la Home."""
@@ -227,15 +225,16 @@ class ClinicaManager(models.Manager):
     def obtener_panel_home(self) -> dict:
         return self.get_queryset().metricas_del_dia()
 
-
-    #FALTA IMPLEMENTAR ClinicaManager()    
+    
     """MODELO TURNO"""
 class Turno(models.Model):
     """Representa a un profesional médico disponible para turnos."""
     ESTADOS = [
         ('PENDIENTE', 'Pendiente'),
+        ('ACEPTADO', 'Aceptado'),
         ('CONFIRMADO', 'Confirmado'),
         ('CANCELADO', 'Cancelado'),
+        ('FINALIZADO', 'Finalizado'),
         ('REPROGRAMACION_PENDIENTE', 'Reprogramación Pendiente'),
     ]
     fecha_hora = models.DateTimeField()
@@ -273,10 +272,9 @@ class Turno(models.Model):
             errors.append("El paciente es obligatorio.")
         if not self.fecha_hora:
             errors.append("La fecha y hora son obligatorias.")
-            return errors  # Cortamos acá si no hay fecha para no romper el código de abajo
+            return errors
 
         # --- INTELIGENCIA DE NEGOCIO 1: FRANJAS HORARIAS ---
-        # 1. Mapeamos el día de la semana de Python (0=Lunes) a tu diccionario DIAS
         mapeo_dias = {
             0: "LUN", 1: "MAR", 2: "MIE",
             3: "JUE", 4: "VIE", 5: "SAB", 6: "DOM"
@@ -314,7 +312,7 @@ class Turno(models.Model):
             if medico_ausente:
                 errors.append("El médico se encuentra de licencia/ausente en esa fecha.")
         except ImportError:
-            pass # Pasa de largo si tu compañero todavía no creó la clase Ausencia
+            pass 
 
         return errors
     
@@ -331,8 +329,9 @@ class Turno(models.Model):
             fecha_envio=timezone.now(),
             tipo="SISTEMA",
             asunto="Turno Creado",
-            mensaje=f"Se ha solicitado un turno para el día {instancia.fecha_hora.strftime('%d/%m/%Y %H:%M')} hs."
-            )
+            mensaje=f"Se ha solicitado un turno para el día {instancia.fecha_hora.strftime('%d/%m/%Y %H:%M')} hs.",
+            usuarios=[instancia.paciente.usuario]
+        )
         return instancia, []
     
     def update(self, **kwargs) -> list[str]:
@@ -369,7 +368,8 @@ class Turno(models.Model):
             fecha_envio=timezone.now(),
             tipo="SISTEMA",
             asunto="Turno Confirmado",
-            mensaje=f"Tu turno para el {self.fecha_hora.strftime('%d/%m/%Y %H:%M')} hs fue confirmado por el profesional."
+            mensaje=f"Tu turno para el {self.fecha_hora.strftime('%d/%m/%Y %H:%M')} hs fue confirmado por el profesional.",
+            usuarios=[self.paciente.usuario]        
         )
         return []
     
@@ -533,7 +533,6 @@ class Ausencia(models.Model):
         hoy = timezone.now().date()
         return self.fecha_inicio <= hoy <= self.fecha_fin
 
-'''---'''
 
 class Recordatorio(models.Model):
     """Notificaciones."""

@@ -14,6 +14,8 @@ urlpatterns = [
     path("pacientes/<int:paciente_id>/historial/", views.HistorialPacienteListView.as_view(), name="historial_paciente"),
     path("turno/nuevo/", views.TurnoCreateView.as_view(), name="crear_turno"),
     path("turnos/", views.ListaTurnosView.as_view(), name="lista_turnos"),
+    path("mis-turnos/", views.MisTurnosView.as_view(), name="mis_turnos"),
+    path("turnos/<int:pk>/aceptar/", views.AceptarTurnoView.as_view(), name="aceptar_turno"),
     path("turnos/<int:pk>/cancelar/", views.CancelarTurnoView.as_view(), name="cancelar_turno"),
     path("turnos/<int:pk>/observacion/", views.ObservacionUpdateView.as_view(), name="editar_observacion"),
     path('turnos/<int:pk>/procesar-reprogramacion/', views.ProcesarReprogramacionView.as_view(), name='procesar_reprogramacion'),
@@ -25,4 +27,3 @@ urlpatterns = [
     path("mis-recordatorios/", views.MisRecordatoriosView.as_view(), name="mis_recordatorios"),
     path("recordatorios/<int:pk>/leido/", views.MarcarRecordatorioLeidoView.as_view(), name="marcar_recordatorio_leido"),
 ]
-
