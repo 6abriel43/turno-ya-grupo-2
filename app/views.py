@@ -347,6 +347,15 @@ class AusenciaCreateView(LoginRequiredMixin, MedicoRequiredMixin, CreateView):
         messages.success(self.request, f"Ausencia registrada. Se han afectado {turnos_afectados.count()} turnos para reprogramación.")
         return response
 
+class MisRecordatoriosView(LoginRequiredMixin, ListView):
+    """Bandeja de entrada para que el paciente autenticado visualice sus recordatorios."""
+    model = Recordatorio
+    template_name = 'clinica/recordatorios_list.html'
+    context_object_name = 'lista_recordatorios'
+
+    def get_queryset(self):
+        return Recordatorio.objects.filter(turno__paciente__usuario=self.request.user).order_by('-fecha_envio')
+
 from django.core.exceptions import PermissionDenied
 
 class MarcarRecordatorioLeidoView(LoginRequiredMixin, View):
@@ -372,13 +381,6 @@ class MarcarRecordatorioLeidoView(LoginRequiredMixin, View):
             return redirect('app:lista_recordatorios')
         return redirect('app:mis_recordatorios')
     
-class MarcarRecordatorioLeidoView(LoginRequiredMixin, View):
-    """Acción POST para mutar el estado de lectura del recordatorio de manera segura."""
-    
-    def post(self, request, pk):
-        recordatorio = get_object_or_404(Recordatorio, pk=pk, turno__paciente__usuario=request.user)
-        recordatorio.marcar_como_leido()
-        return redirect('app:mis_recordatorios')
 
 class ProcesarReprogramacionView(LoginRequiredMixin, PacienteRequiredMixin, View):
     """Maneja la aceptación/rechazo de reprogramaciones de turnos."""
