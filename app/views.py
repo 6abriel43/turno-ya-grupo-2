@@ -347,14 +347,30 @@ class AusenciaCreateView(LoginRequiredMixin, MedicoRequiredMixin, CreateView):
         messages.success(self.request, f"Ausencia registrada. Se han afectado {turnos_afectados.count()} turnos para reprogramación.")
         return response
 
-class MisRecordatoriosView(LoginRequiredMixin, ListView):
-    """Bandeja de entrada para que el paciente autenticado visualice sus recordatorios."""
-    model = Recordatorio
-    template_name = 'clinica/recordatorios_list.html'
-    context_object_name = 'lista_recordatorios'
+from django.core.exceptions import PermissionDenied
 
-    def get_queryset(self):
-        return Recordatorio.objects.filter(turno__paciente__usuario=self.request.user).order_by('-fecha_envio')
+class MarcarRecordatorioLeidoView(LoginRequiredMixin, View):
+    """Acción POST para mutar el estado de lectura del recordatorio de manera segura."""
+    
+    def post(self, request, pk):
+        # 1. Obtenemos el recordatorio por su ID general (sin filtrar usuario aún)
+        recordatorio = get_object_or_404(Recordatorio, pk=pk)
+        
+        # 2. Verificamos los permisos cruzando los datos con el Turno original
+        es_su_medico = hasattr(request.user, 'medico') and recordatorio.turno.medico == request.user.medico
+        es_su_paciente = hasattr(request.user, 'paciente') and recordatorio.turno.paciente.usuario == request.user
+        
+        # Si no es ni el médico de ese turno ni el paciente de ese turno, bloqueamos (Error 403)
+        if not (es_su_medico or es_su_paciente or request.user.is_superuser):
+            raise PermissionDenied("No tienes permiso para modificar esta notificación.")
+        
+        # 3. Si pasó la barrera de seguridad, lo marcamos como leído
+        recordatorio.marcar_como_leido()
+        
+        # 4. Redireccionamos a la bandeja correcta
+        if hasattr(request.user, 'medico'):
+            return redirect('app:lista_recordatorios')
+        return redirect('app:mis_recordatorios')
     
 class MarcarRecordatorioLeidoView(LoginRequiredMixin, View):
     """Acción POST para mutar el estado de lectura del recordatorio de manera segura."""

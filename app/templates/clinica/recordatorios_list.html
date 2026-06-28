@@ -4,8 +4,13 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="fw-bold text-dark h3">🔔 Panel de Recordatorios Enviados</h1>
-            <p class="text-muted small">Seguimiento de alertas y comunicaciones a pacientes.</p>
+            {% if user.medico %}
+                <h1 class="fw-bold text-dark h3">🔔 Panel de Recordatorios (Médico)</h1>
+                <p class="text-muted small">Seguimiento de alertas y comunicaciones a tus pacientes.</p>
+            {% else %}
+                <h1 class="fw-bold text-dark h3">🔔 Mis Recordatorios</h1>
+                <p class="text-muted small">Alertas y mensajes sobre tus turnos médicos.</p>
+            {% endif %}
         </div>
         <a href="{% url 'app:home' %}" class="btn btn-outline-secondary btn-sm">Volver al Home</a>
     </div>
@@ -23,8 +28,17 @@
                             <span class="badge bg-warning bg-opacity-10 text-warning small">Pendiente</span>
                         {% endif %}
                     </div>
-                    <h5 class="card-title fw-bold text-truncate mb-1">{{ recordatorio.turno.paciente }}</h5>
+                    
+                    <h5 class="card-title fw-bold text-truncate mb-1">
+                        {% if user.medico %}
+                            <i class="bi bi-person"></i> Paciente: {{ recordatorio.turno.paciente.nombre }} {{ recordatorio.turno.paciente.apellido }}
+                        {% else %}
+                            <i class="bi bi-file-medical"></i> Dr/a. {{ recordatorio.turno.medico.nombre }} {{ recordatorio.turno.medico.apellido }}
+                        {% endif %}
+                    </h5>
+                    
                     <p class="card-text small text-secondary flex-grow-1">{{ recordatorio.mensaje }}</p>
+                    
                     {% if not recordatorio.leido %}
                         <form method="post" action="{% url 'app:marcar_recordatorio_leido' recordatorio.pk %}" class="mt-2 text-end">
                             {% csrf_token %}
@@ -33,6 +47,7 @@
                             </button>
                         </form>
                     {% endif %}
+                    
                     <div class="border-top pt-2 mt-2 bg-light p-2 rounded-2">
                         <span class="d-block small text-muted"><strong>Tipo:</strong> {{ recordatorio.tipo }}</span>
                     </div>
@@ -41,7 +56,7 @@
         </div>
         {% empty %}
         <div class="col-12 text-center py-5">
-            <p class="text-muted">No se enviaron recordatorios todavía.</p>
+            <p class="text-muted">No tienes recordatorios registrados en este momento.</p>
         </div>
         {% endfor %}
     </div>
