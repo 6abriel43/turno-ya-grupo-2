@@ -47,6 +47,277 @@
       "date_joined": "2026-06-26T00:00:00Z"
     }
   },
+  { "model": "auth.user",
+    "pk": 4,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$wiofbigIOuiwbIBaibIObowidmr596psiscnwiqQwuehjsdSDHJkwaosw0qr02",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "paciente2",
+      "first_name": "Ana",
+      "last_name": "López",
+      "email": "ana@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 5,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$cvjbiodfIDionklIkvKAppwkvid0383nwrinopmhfgjb83nklasid8kiwl",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "paciente3",
+      "first_name": "Luis",
+      "last_name": "Gómez",
+      "email": "luis@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+      }
+  },
+  {
+    "model": "auth.user",
+    "pk": 6,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$oboibehrjxcbeIIjbdsjadkLsdbwibsKDkwibqeugsbDUu72b3udSu7",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "paciente4",
+      "first_name": "Martina",
+      "last_name": "Ramirez",
+      "email": "martina@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 7,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$ngiodfnASIiwciabdiwer84jba2nasdklAwdobvcbx=askd+amds",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "paciente5",
+      "first_name": "Diego",
+      "last_name": "Fernández",
+      "email": "diego@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 8,
+    "fields": {
+      "password":"pbkdf2_sha256$1000000$fbidbieibcjasasdbujAUDbjkcvnmSDsjwubxjAjdaDJBSdbwsWABdWdibbxlbdSF",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "paciente6",
+      "first_name": "Sofía",
+      "last_name": "Díaz",
+      "email": "sofia@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 9,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$3894diobfibIAdokdncvbeibAbsdiopkckllASDKninasdn",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "paciente7",
+      "first_name": "Lucas",
+      "last_name": "Martínez",
+      "email": "lucas@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 10,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$ifgiobbioebf(blbbno0bbawe=dw0?mawpnciwbdi",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "paciente8",
+      "first_name": "Valentina",
+      "last_name": "Hernández",
+      "email": "valentina@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 11,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$n9orbibribdisfviw=bIDBiobsklwDBkl+dnwaib",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "paciente9",
+      "first_name": "Santiago",
+      "last_name": "López",
+      "email": "santiago@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 12,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$aiwbivbeururt%3834jkbjschreio75o84o2iiaosbdwybfjd",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "paciente10",
+      "first_name": "Isabella",
+      "last_name": "Gómez",
+      "email": "isabella@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 13,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$adobdiovbwrbIbdbaodbsDBODBbdklwbidb9834lbiowq92nlnal1nsklnd",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "medico2",
+      "first_name": "Mamberto",
+      "last_name": "Rascacielo",
+      "email": "mamberto@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 14,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$qwliobdawdbiowabDbiwbdiwbiroqbikbiu3bukdb812bib38b3kb218bb",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "medico3",
+      "first_name": "Ernesto",
+      "last_name": "Lampiño",
+      "email": "ernesto@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 15,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$qopwnbopbb16&dbsabdidanlwdo0nwbdioboBAddiqboigbQDNondobaskdbwi",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "medico4",
+      "first_name": "Lara",
+      "last_name": "Portland",
+      "email": "lara@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 16,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$oieofbidobaibdIOBibdiwbjaKDBibdwklBDIb18bi2bd3b9bkdbIALb9b2",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "medico5",
+      "first_name": "Hermenehildo",
+      "last_name": "Mars",
+      "email": "hermenehildo@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 17,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$uqwibfabodwpDISbwidbsKDLliwbdialDBilbdILBwid2db733b91bdbosbdowb",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "medico6",
+      "first_name": "Vayne",
+      "last_name": "Gaga",
+      "email": "vayne@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 18,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$klvdbbwiobaiwodb(o92dobdasjdb17sbdo28Odbdiob38Oob#dbiowfb=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "medico7",
+      "first_name": "Bruno",
+      "last_name": "Mundo",
+      "email": "bruno@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 19,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$wibdibbib!82bib9b839b4=bbsajdbioq8bjkibIQDBibsadkabdow",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "medico8",
+      "first_name": "Brand",
+      "last_name": "Locuaz",
+      "email": "brand@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 20,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$kabdklvdblBAbisbdwjakdsbUbduwbdb28bdjsbu2d8bjabAJBkABS",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "medico9",
+      "first_name": "Garen",
+      "last_name": "Smith",
+      "email": "garen@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-26T00:00:00Z"
+    }
+  },
   {
     "model": "app.especialidad",
     "pk": 1,
