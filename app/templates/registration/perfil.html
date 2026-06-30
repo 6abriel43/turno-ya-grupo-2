@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - TurnoYa{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1 class="page-title">Editar Perfil</h1>
+    <p class="page-subtitle">Actualiza tu información personal en el sistema.</p>
+  </div>
+</section>
+
+<section class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="app-card">
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="d-grid gap-2 mt-4">
+          <button type="submit" class="btn btn-primary-app">Guardar Cambios</button>
+          <a href="{% url 'app:home' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
