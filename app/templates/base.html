@@ -74,6 +74,13 @@
                   <span>Ausencias</span>
                 </a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'mis_franjas' %}active{% endif %}"
+                  href="{% url 'app:mis_franjas' %}">
+                  {% include "includes/iconos.html" with icono="calendario" %}
+                  <span>Mis Horarios</span>
+                </a>
+              </li>
             {% elif user.paciente %}
               <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'crear_turno' %}active{% endif %}"

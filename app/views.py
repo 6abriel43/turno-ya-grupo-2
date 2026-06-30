@@ -5,7 +5,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
-from .models import Medico, Turno, Paciente, Especialidad, ObraSocial, Ausencia, Recordatorio
+from .models import Medico, Turno, Paciente, Especialidad, ObraSocial, Ausencia, Recordatorio, FranjaHoraria
 from django.utils import timezone
 from .forms import TurnoForm, RegistroPacienteForm, PerfilMedicoForm, PerfilPacienteForm
 from django.db.models import Q
@@ -424,3 +424,13 @@ class ProcesarReprogramacionView(LoginRequiredMixin, PacienteRequiredMixin, View
             messages.error(request, "Acción no válida o turno sin reprogramación pendiente.")
 
         return redirect("app:home")
+    
+class MisFranjasListView(LoginRequiredMixin, MedicoRequiredMixin, ListView):
+    """Vista para que el médico logueado consulte sus franjas horarias confirmadas."""
+    model = FranjaHoraria
+    template_name = "clinica/mis_franjas.html"
+    context_object_name = "franjas"
+
+    def get_queryset(self):
+        # Filtra las franjas horarias para que pertenezcan únicamente al médico actual
+        return FranjaHoraria.objects.filter(medicos=self.request.user.medico).order_by('dia', 'hora_inicio')
