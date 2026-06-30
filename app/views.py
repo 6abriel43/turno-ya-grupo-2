@@ -103,14 +103,6 @@ class ListaMedicosView(LoginRequiredMixin, ListView):
         return context
     
 
-
-# TODO: implementar las siguientes vistas:
-# class DetalleMedicoView(...): ...
-# class ListaTurnosView(...): ...
-# class NuevoTurnoView(...): ...
-# class CancelarTurnoView(...): ...
-# class ListaPacientesView(...): ...
-
 class DetalleMedicoView(LoginRequiredMixin, DetailView):
     """Muestra el detalle de un médico específico."""
 
@@ -288,7 +280,7 @@ class RecordatorioListView(LoginRequiredMixin, MedicoRequiredMixin, ListView):
 class RegistroUsuarioView(CreateView):
     """Vista basada en clase para el alta de nuevos usuarios en el sistema."""
     form_class = RegistroPacienteForm
-    template_name = 'registro/registro.html'
+    template_name = 'registration/registro.html'
     success_url = reverse_lazy('app:home')
 
     def form_valid(self, form):
@@ -298,7 +290,7 @@ class RegistroUsuarioView(CreateView):
 "EDITAR INFORMACION DE PERFIL DE USUARIO"
 class PerfilUpdateView(LoginRequiredMixin, UpdateView):
     """Vista inteligente para que médicos y pacientes editen su propio perfil."""
-    template_name = 'registro/perfil.html'
+    template_name = 'registration/perfil.html'
     success_url = reverse_lazy('app:home')
 
     def get_form_class(self):
