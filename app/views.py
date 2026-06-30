@@ -4,8 +4,8 @@ from django.views.generic import ListView, TemplateView, CreateView, View, Detai
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import get_object_or_404, redirect
-from .models import Medico, Turno, Paciente, Especialidad, ObraSocial, Ausencia, Recordatorio
+from django.shortcuts import get_object_or_404, redirect, render
+from .models import Medico, Turno, Paciente, Especialidad, ObraSocial, Ausencia, Recordatorio, FranjaHoraria
 from django.utils import timezone
 from .forms import TurnoForm, RegistroPacienteForm, PerfilMedicoForm, PerfilPacienteForm
 from django.db.models import Q
@@ -102,14 +102,6 @@ class ListaMedicosView(LoginRequiredMixin, ListView):
         context['obra_social_seleccionada'] = self.request.GET.get("obra_social", "")
         return context
     
-
-
-# TODO: implementar las siguientes vistas:
-# class DetalleMedicoView(...): ...
-# class ListaTurnosView(...): ...
-# class NuevoTurnoView(...): ...
-# class CancelarTurnoView(...): ...
-# class ListaPacientesView(...): ...
 
 class DetalleMedicoView(LoginRequiredMixin, DetailView):
     """Muestra el detalle de un médico específico."""
@@ -288,8 +280,16 @@ class RecordatorioListView(LoginRequiredMixin, MedicoRequiredMixin, ListView):
 class RegistroUsuarioView(CreateView):
     """Vista basada en clase para el alta de nuevos usuarios en el sistema."""
     form_class = RegistroPacienteForm
-    template_name = 'registro/registro.html'
+    template_name = 'registration/registro.html'
     success_url = reverse_lazy('app:home')
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Si el usuario ya inició sesión (está autenticado), lo redirigimos al Home
+        if request.user.is_authenticated:
+            return redirect('app:home')
+        
+        # Si no está logueado, continúa con el flujo normal de la vista
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         """Pipeline de éxito cuando el formulario pasa las validaciones."""
@@ -298,7 +298,7 @@ class RegistroUsuarioView(CreateView):
 "EDITAR INFORMACION DE PERFIL DE USUARIO"
 class PerfilUpdateView(LoginRequiredMixin, UpdateView):
     """Vista inteligente para que médicos y pacientes editen su propio perfil."""
-    template_name = 'registro/perfil.html'
+    template_name = 'registration/perfil.html'
     success_url = reverse_lazy('app:home')
 
     def get_form_class(self):
@@ -432,3 +432,13 @@ class ProcesarReprogramacionView(LoginRequiredMixin, PacienteRequiredMixin, View
             messages.error(request, "Acción no válida o turno sin reprogramación pendiente.")
 
         return redirect("app:home")
+    
+class MisFranjasListView(LoginRequiredMixin, MedicoRequiredMixin, ListView):
+    """Vista para que el médico logueado consulte sus franjas horarias confirmadas."""
+    model = FranjaHoraria
+    template_name = "clinica/mis_franjas.html"
+    context_object_name = "franjas"
+
+    def get_queryset(self):
+        # Filtra las franjas horarias para que pertenezcan únicamente al médico actual
+        return FranjaHoraria.objects.filter(medicos=self.request.user.medico).order_by('dia', 'hora_inicio')

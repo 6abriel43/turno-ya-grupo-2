@@ -25,5 +25,6 @@ urlpatterns = [
     path("registro/", views.RegistroUsuarioView.as_view(), name="registro"),
     path("perfil/", views.PerfilUpdateView.as_view(), name="perfil"),
     path("mis-recordatorios/", views.MisRecordatoriosView.as_view(), name="mis_recordatorios"),
+    path("mis-franjas/", views.MisFranjasListView.as_view(), name="mis_franjas"),
     path("recordatorios/<int:pk>/leido/", views.MarcarRecordatorioLeidoView.as_view(), name="marcar_recordatorio_leido"),
 ]

@@ -48,6 +48,70 @@
     }
   },
   {
+    "model": "auth.user",
+    "pk": 4,
+    "fields": {
+      "password": "pbkdf2_sha256$870000$L7vjY1jYjYjYjYjYjYjYjY$L7vjY1jYjYjYjYjYjYjYjYjYjYjYjYjYjYjYjYjYjYc=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "medico2",
+      "first_name": "Jorge",
+      "last_name": "López",
+      "email": "jorge@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-30T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 5,
+    "fields": {
+      "password": "pbkdf2_sha256$870000$L7vjY1jYjYjYjYjYjYjYjY$L7vjY1jYjYjYjYjYjYjYjYjYjYjYjYjYjYjYjYjYjYc=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "medico3",
+      "first_name": "Ana",
+      "last_name": "Silva",
+      "email": "ana@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-30T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 6,
+    "fields": {
+      "password": "pbkdf2_sha256$870000$L7vjY1jYjYjYjYjYjYjYjY$L7vjY1jYjYjYjYjYjYjYjYjYjYjYjYjYjYjYjYjYjYc=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "paciente2",
+      "first_name": "María",
+      "last_name": "García",
+      "email": "maria@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-30T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 7,
+    "fields": {
+      "password": "pbkdf2_sha256$870000$L7vjY1jYjYjYjYjYjYjYjY$L7vjY1jYjYjYjYjYjYjYjYjYjYjYjYjYjYjYjYjYjYc=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "paciente3",
+      "first_name": "Roberto",
+      "last_name": "Gómez",
+      "email": "roberto@turnoya.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-30T00:00:00Z"
+    }
+  },
+  {
     "model": "app.especialidad",
     "pk": 1,
     "fields": {
@@ -108,13 +172,37 @@
     }
   },
   {
+    "model": "app.medico",
+    "pk": 2,
+    "fields": {
+      "usuario": 4,
+      "nombre": "Jorge",
+      "apellido": "López",
+      "matricula": "MP-1002",
+      "especialidad": 2,
+      "obra_social": 3
+    }
+  },
+  {
+    "model": "app.medico",
+    "pk": 3,
+    "fields": {
+      "usuario": 5,
+      "nombre": "Ana",
+      "apellido": "Silva",
+      "matricula": "MP-1003",
+      "especialidad": 3,
+      "obra_social": 1
+    }
+  },
+  {
     "model": "app.franjahoraria",
     "pk": 1,
     "fields": {
       "dia": "LUN",
       "hora_inicio": "08:00:00",
       "hora_fin": "20:00:00",
-      "medicos": [1]
+      "medicos": [1, 2]
     }
   },
   {
@@ -124,7 +212,7 @@
       "dia": "MAR",
       "hora_inicio": "08:00:00",
       "hora_fin": "20:00:00",
-      "medicos": [1]
+      "medicos": [1, 3]
     }
   },
   {
@@ -134,7 +222,7 @@
       "dia": "MIE",
       "hora_inicio": "08:00:00",
       "hora_fin": "20:00:00",
-      "medicos": [1]
+      "medicos": [1, 2, 3]
     }
   },
   {
@@ -154,7 +242,7 @@
       "dia": "VIE",
       "hora_inicio": "08:00:00",
       "hora_fin": "20:00:00",
-      "medicos": [1]
+      "medicos": [1, 3]
     }
   },
   {
@@ -164,7 +252,7 @@
       "dia": "SAB",
       "hora_inicio": "08:00:00",
       "hora_fin": "20:00:00",
-      "medicos": [1]
+      "medicos": [1, 2]
     }
   },
   {
@@ -188,6 +276,32 @@
       "email": "carlos@turnoya.com",
       "telefono": "1122334455",
       "obra_social": 2
+    }
+  },
+  {
+    "model": "app.paciente",
+    "pk": 2,
+    "fields": {
+      "usuario": 6,
+      "nombre": "María",
+      "apellido": "García",
+      "dni": "35222333",
+      "email": "maria@turnoya.com",
+      "telefono": "1166778899",
+      "obra_social": 1
+    }
+  },
+  {
+    "model": "app.paciente",
+    "pk": 3,
+    "fields": {
+      "usuario": 7,
+      "nombre": "Roberto",
+      "apellido": "Gómez",
+      "dni": "28444555",
+      "email": "roberto@turnoya.com",
+      "telefono": "1199001122",
+      "obra_social": 3
     }
   }
 ]

@@ -2,14 +2,15 @@
 
 from django.contrib import admin
 from django.urls import include, path
-
 from app import views as app_views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", app_views.HomeView.as_view(), name="home"),
     path("ausencias/", app_views.AusenciaListView.as_view(), name="lista_ausencias"),
     path("recordatorios/", app_views.RecordatorioListView.as_view(), name="lista_recordatorios"),
+    path('accounts/login/', auth_views.LoginView.as_view(redirect_authenticated_user=True), name='login'),
     path("accounts/", include("django.contrib.auth.urls")),
     path("", include("app.urls", namespace="app")),
 ]
