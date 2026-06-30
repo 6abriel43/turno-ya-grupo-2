@@ -4,7 +4,7 @@ from django.views.generic import ListView, TemplateView, CreateView, View, Detai
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from .models import Medico, Turno, Paciente, Especialidad, ObraSocial, Ausencia, Recordatorio, FranjaHoraria
 from django.utils import timezone
 from .forms import TurnoForm, RegistroPacienteForm, PerfilMedicoForm, PerfilPacienteForm
@@ -282,6 +282,14 @@ class RegistroUsuarioView(CreateView):
     form_class = RegistroPacienteForm
     template_name = 'registration/registro.html'
     success_url = reverse_lazy('app:home')
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Si el usuario ya inició sesión (está autenticado), lo redirigimos al Home
+        if request.user.is_authenticated:
+            return redirect('app:home')
+        
+        # Si no está logueado, continúa con el flujo normal de la vista
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         """Pipeline de éxito cuando el formulario pasa las validaciones."""

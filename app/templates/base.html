@@ -109,19 +109,29 @@
 
         <ul class="navbar-nav ms-lg-auto align-items-lg-center app-user-menu">
           {% if user.is_authenticated %}
+            
             <li class="nav-item app-user-name">
               Hola, <strong>{{ user.username }}</strong>
             </li>
+
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}" href="{% url 'app:perfil' %}">
+                {% include "includes/iconos.html" with icono="usuario" %}
+                <span>Mi Perfil</span>
+              </a>
+            </li>
+
             <li class="nav-item">
               {# django 5.x requiere post para logout por seguridad csrf #}
               <form method="post" action="{% url 'logout' %}" class="d-inline">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-outline-light app-logout-btn">
+                <button type="submit" class="btn btn-outline-light app-logout-btn ms-2">
                   {% include "includes/iconos.html" with icono="salir" %}
                   <span>Salir</span>
                 </button>
               </form>
             </li>
+
           {% else %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'login' %}">Ingresar</a>
